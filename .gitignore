@@ -49,6 +49,7 @@ pnpm-debug.log*
 # Run outputs, receipts, screenshots and phase audit materials are local.
 /docs/submission/**
 # Machine-specific Azure deployment exports (not reusable templates).
+/deploy/foundry-demo.env
 /deploy/phase9-api.json
 /deploy/phase9-api.yaml
 /deploy/phase9-web.json
