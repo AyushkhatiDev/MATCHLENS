@@ -24,7 +24,8 @@ def actual():
 
 @pytest.fixture(scope='module')
 def workflow():
-    value=json.loads(Path('data/generated/phase5/paced/agent_results.json').read_text())['results'][0]
+    generated=json.loads(Path('data/generated/phase5/paced/agent_results.json').read_text())
+    value=generated[0]['result'] if isinstance(generated,list) else generated['results'][0]
     return WorkflowResult.model_validate(value)
 
 

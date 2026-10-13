@@ -7,10 +7,12 @@ import {applyMessage,parseMessage,savePreferences,readPreferences} from '../lib/
 import {loadMatch} from '../lib/api';
 import {clock} from '../lib/format';
 import Experience,{ExplanationPanel,EvidencePanel,Broadcast,overlayPayload} from '../components/experience';
-const actual=JSON.parse(readFileSync('../data/generated/phase5/paced/agent_results.json','utf8')).results[0];
-const insight=insightSchema.parse({insight_id:actual.moment_id,moment:actual.state.triggered_moment,explanation:actual.state.explanation_context,evidence:actual.state.evidence,source_events:[],agent_explanation:actual.explanation,narrative:actual.narrative,workflow_status:actual.workflow_status,trace_id:actual.trace_id});
+const generated=JSON.parse(readFileSync('../data/generated/phase5/paced/agent_results.json','utf8'));
+const record=Array.isArray(generated)?generated[0]:generated.results[0];
+const actual=record.result??record;
+const insight=insightSchema.parse({insight_id:record.live_moment_key??actual.moment_id,moment:actual.state.triggered_moment,explanation:actual.state.explanation_context,evidence:actual.state.evidence,source_events:[],agent_explanation:actual.explanation,narrative:actual.narrative,workflow_status:actual.workflow_status,trace_id:actual.trace_id});
 const intel=JSON.parse(readFileSync('../data/generated/phase5/paced/match_intelligence.json','utf8'));
-const snapshot=snapshotSchema.parse({match:{match_id:intel.match_id,home:{team_id:intel.home_team.team_id,name:intel.home_team.team_name,short_name:'HOME'},away:{team_id:intel.away_team.team_id,name:intel.away_team.team_name,short_name:'AWAY'},competition:'Synthetic',venue:'Synthetic venue',synthetic:true,runtime_mode:'mock'},state:{status:'paused',simulation_time:actual.state.current_time,home_score:1,away_score:0,total_events:intel.summary.total_events,speed:100,tactical_state:intel.tactical_states[0],home_team:intel.home_team,away_team:intel.away_team,players:intel.players,windows:intel.rolling_windows,possession_player_id:null},events:[],insights:[insight],stream_cursor:10});
+const snapshot=snapshotSchema.parse({match:{match_id:intel.match_id,home:{team_id:intel.home_team.team_id,name:intel.home_team.team_name,short_name:'HOME'},away:{team_id:intel.away_team.team_id,name:intel.away_team.team_name,short_name:'AWAY'},competition:'Synthetic',venue:'Synthetic venue',synthetic:true,runtime_mode:'mock'},state:{status:'paused',simulation_time:record.current_time??actual.state.current_time,home_score:1,away_score:0,total_events:intel.summary.total_events,speed:100,tactical_state:intel.tactical_states[0],home_team:intel.home_team,away_team:intel.away_team,players:intel.players,windows:intel.rolling_windows,possession_player_id:null},events:[],insights:[insight],stream_cursor:10});
 vi.mock('../lib/api',()=>({base:'http://localhost:8000',loadMatch:vi.fn(async()=>snapshot),control:vi.fn(async()=>undefined)}));
 class MockEvents{static latest:MockEvents;onopen:(()=>void)|null=null;onerror:(()=>void)|null=null;onmessage:((event:{data:string})=>void)|null=null;close=vi.fn();constructor(){MockEvents.latest=this;} }
 vi.stubGlobal('EventSource',MockEvents);
