@@ -39,6 +39,26 @@ def test_public_origins_fail_closed():
     with pytest.raises(ValueError):create_public_app({**ENV,'APP_FRONTEND_ORIGINS':'http://localhost:3000'})
 
 
+def test_mock_public_demo_needs_no_foundry_and_never_reports_live():
+    env={'APP_FRONTEND_ORIGINS':'https://matchlens.example','AGENTIC_MODE':'mock'}
+    with TestClient(create_public_app(env)) as client:
+        foundry=client.get('/health').json()['foundry']
+        assert foundry=={'status':'MOCK','verified':False}
+        session=client.post('/api/sessions',headers={'Origin':env['APP_FRONTEND_ORIGINS']}).json()
+        assert session['runtime']=='mock'
+        match=client.get(session['api_path']+'/api/matches').json()[0]
+        assert match['runtime_mode']=='mock' and match['foundry_hero_only'] is False
+        assert client.get(session['api_path']+'/api/data-plane').json()['foundry_status']=='MOCK'
+
+
+@pytest.mark.parametrize('env',[{'APP_FRONTEND_ORIGINS':'https://matchlens.example','AGENTIC_MODE':'mock'},ENV])
+def test_public_health_never_claims_event_hubs_verification(env):
+    # The public gateway always replays the recorded file and holds no Event Hubs evidence.
+    with TestClient(create_public_app(env)) as client:
+        event_hubs=client.get('/health').json()['event_hubs']
+    assert event_hubs=={'status':'UNVERIFIED','current_demo_input':'recorded local replay','continuous_connection':False}
+
+
 def test_restart_budget_preserves_pause_resume_and_speed():
     app=create_public_app(ENV)
     with TestClient(app) as client:

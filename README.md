@@ -129,6 +129,10 @@ test -e deploy/foundry-demo.env || cp deploy/foundry-demo.env.example deploy/fou
 
 Set `FOUNDRY_PROJECT_ENDPOINT` and `FOUNDRY_MODEL` in `deploy/foundry-demo.env` to the existing authorized project and deployment. This local file is ignored by Git and is loaded only by `./start.sh` in its default Foundry mode. The checked-in example remains a placeholder template. Precedence is example defaults, then the local Foundry file, then exported process variables; the launcher applies its required Foundry mode, local replay, demo controls and selected frontend/API URLs last. Missing or invalid settings fail before either server starts, without displaying values. Authentication continues to use the existing Azure identity through `DefaultAzureCredential`. Foundry availability, permissions, quota and cost depend on your Azure account.
 
+### Public deployment
+
+To publish the browser demo (Vercel frontend, Azure Container Apps API, mock mode by default), follow [deploy/public-demo.md](deploy/public-demo.md).
+
 ## Configuration reference
 
 Examples are templates only. `.env` files are not automatically loaded by Python; `./start.sh` reads its selected `deploy/*.env.example` profile and overlays the current process environment. `frontend/.env.example` documents the browser-side defaults; Next.js reads its `NEXT_PUBLIC_` settings at dev-server start or build time.

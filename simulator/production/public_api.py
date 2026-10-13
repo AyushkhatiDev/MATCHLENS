@@ -31,7 +31,7 @@ def create_public_app(env=None):
     config=AppConfig.from_env({**env,'APP_ENV':'demo','EVENT_SOURCE':'local','APP_DEMO_CONTROLS':'true',
                              'APP_DIAGNOSTICS':'false','APP_AUTOSTART':'false',
                              'APP_FOUNDRY_HERO_ONLY':str(env.get('AGENTIC_MODE','mock')=='foundry').lower()})
-    if config.agent.mode!='foundry' and not local:raise ValueError('Public demo requires genuine Foundry configuration.')
+    # Mock mode is an explicit no-cost public profile; /health and every execution record report MOCK, never live.
     sessions={};owners={};requests=deque(maxlen=500);jobs=asyncio.Semaphore(2)
     max_sessions=8;ttl=600
 
@@ -102,7 +102,7 @@ def create_public_app(env=None):
                      if i.execution and i.execution.mode=='foundry'),None)
         return {'status':'healthy','application':'running','production_demo':True,'database':'not_used',
                 'foundry':{'status':latest.status if latest else 'MOCK' if config.agent.mode=='mock' else 'FOUNDRY UNAVAILABLE','verified':bool(latest and latest.status=='FOUNDRY LIVE')},
-                'event_hubs':{'status':'HISTORICAL VERIFICATION','current_demo_input':'recorded local replay',
+                'event_hubs':{'status':'UNVERIFIED','current_demo_input':'recorded local replay',
                               'continuous_connection':False},
                 'data_plane':{'fabric':downstream_verification(),'current_input':'recorded local replay'},
                 'frontend_origin':origins[0],'active_sessions':len(sessions),'session_capacity':max_sessions,
