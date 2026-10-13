@@ -24,7 +24,7 @@ def actual():
 
 @pytest.fixture(scope='module')
 def workflow():
-    value=json.loads(Path('data/generated/phase5/paced/agent_results.json').read_text())[0]['result']
+    value=json.loads(Path('data/generated/phase5/paced/agent_results.json').read_text())['results'][0]
     return WorkflowResult.model_validate(value)
 
 
