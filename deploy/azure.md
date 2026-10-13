@@ -1,5 +1,7 @@
 # Azure deployment notes
 
+For the public judge demo (Vercel frontend plus one Container Apps API), use [public-demo.md](public-demo.md). This page covers the Event Hubs/Foundry operator profile.
+
 This is an operator guide for a deployment assembled from existing Azure resources. It does not claim that a public MatchLens deployment is currently running. Resource creation, registry publication and application deployment must be performed and verified in the target subscription.
 
 ## Local container smoke test
