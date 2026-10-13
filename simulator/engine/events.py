@@ -171,7 +171,6 @@ def make_shot(
     quality = round(0.4 * dist_factor + 0.45 * finish_factor - pressure_penalty + rng.uniform(-0.05, 0.1), 4)
     quality = max(0.02, min(1.0, quality))
 
-    # Outcome
     r = rng.random()
     if r < quality * 0.35:
         outcome = ShotOutcome.GOAL
@@ -182,7 +181,6 @@ def make_shot(
     else:
         outcome = ShotOutcome.OFF_TARGET
 
-    # Body part
     bp_roll = rng.random()
     if bp_roll < 0.55:
         body_part = BodyPart.RIGHT_FOOT

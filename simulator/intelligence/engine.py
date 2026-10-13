@@ -121,12 +121,10 @@ class IntelligenceEngine:
         self.home_id = match.home_team.team_id
         self.away_id = match.away_team.team_id
 
-        # Build player lookup
         self._players: dict[str, Any] = {}
         for p in match.home_team.players + match.away_team.players:
             self._players[p.player_id] = p
 
-        # Evidence counter
         self._evi_counter = 0
         self._evidence: list[Evidence] = []
 
@@ -417,7 +415,6 @@ class IntelligenceEngine:
             if isinstance(p, PassEvent) and p.start_x is not None:
                 t = _event_third(p.start_x, team_id, self.home_id, p.timestamp)
                 by_zone[t.value] += 1
-                # Check if pass ends in attacking third
                 if p.end_x is not None:
                     end_t = _event_third(p.end_x, team_id, self.home_id, p.timestamp)
                     if end_t == PitchThird.ATTACKING and t != PitchThird.ATTACKING:
@@ -939,7 +936,6 @@ class IntelligenceEngine:
         press_diff = w.home_pressure_index - w.away_pressure_index
         tilt_diff = w.home_field_tilt - w.away_field_tilt
 
-        # Check for chaotic phase (high turnover + high event density)
         if w.turnovers >= 8 and w.event_density > 25:
             return MatchStateName.CHAOTIC_PHASE, 0.65, None
 
