@@ -2,6 +2,7 @@
 import argparse
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import socket
@@ -12,6 +13,10 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+# Running this file directly puts scripts/, not the repository root, on the import path.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+FOUNDRY_SETTINGS = ('FOUNDRY_PROJECT_ENDPOINT', 'FOUNDRY_MODEL')
 
 
 def port(value):
@@ -48,6 +53,56 @@ def stop_children(children):
             break
 
 
+def read_env_file(path):
+    values = {}
+    for line_number, line in enumerate(path.read_text().splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        key, separator, value = line.partition('=')
+        key = key.strip()
+        value = value.strip()
+        if not separator or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key):
+            raise ValueError(f'Invalid {path.name} format on line {line_number}; expected KEY=VALUE.')
+        if value[:1] in ('"', "'"):
+            if len(value) < 2 or value[-1] != value[0]:
+                raise ValueError(f'Invalid {path.name} format on line {line_number}; values must use matching quotes.')
+            value = value[1:-1]
+        values[key] = value
+    return values
+
+
+def launch_environment(mock, frontend_port, backend_port, process_env=None, root=ROOT):
+    profile = root / 'deploy' / ('demo.env.example' if mock else 'foundry-demo.env.example')
+    env = read_env_file(profile)
+    local_config = root / 'deploy' / 'foundry-demo.env'
+    if not mock and local_config.is_file():
+        env.update(read_env_file(local_config))
+    env.update(os.environ if process_env is None else process_env)
+    frontend_url = f'http://127.0.0.1:{frontend_port}'
+    backend_url = f'http://127.0.0.1:{backend_port}'
+    env.update(APP_ENV='local', APP_PUBLIC_DEMO='true', EVENT_SOURCE='local', APP_DEMO_CONTROLS='true', APP_AUTOSTART='false',
+               AGENTIC_MODE='mock' if mock else 'foundry',
+               APP_FOUNDRY_HERO_ONLY='false' if mock else 'true',
+               APP_FRONTEND_ORIGINS=frontend_url, NEXT_PUBLIC_API_BASE_URL=backend_url, NEXT_PUBLIC_DEMO_SESSIONS='true',
+               PYTHONUNBUFFERED='1')
+    return env
+
+
+def foundry_configuration_error(env):
+    missing = [key for key in FOUNDRY_SETTINGS if not env.get(key, '').strip()]
+    if missing:
+        return ('Foundry demo configuration is missing: ' + ', '.join(missing) +
+                '. Set these in deploy/foundry-demo.env or export them; values are not displayed.')
+    from simulator.agentic.config import AgenticConfig
+    try:
+        AgenticConfig.from_env(env)
+    except ValueError:
+        return ('Foundry demo configuration is invalid; check FOUNDRY_PROJECT_ENDPOINT and FOUNDRY_MODEL, '
+                'and leave FOUNDRY_AGENT_ID unset. Values are not displayed.')
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description='Start both MatchLens servers in one terminal. Ctrl+C stops both.')
     parser.add_argument('--mock', action='store_true', help='Use offline mock agents instead of the live Foundry hero demo.')
@@ -56,6 +111,12 @@ def main():
     args = parser.parse_args()
     if args.frontend_port == args.backend_port:
         parser.error('Frontend and backend need different ports.')
+    env = launch_environment(args.mock, args.frontend_port, args.backend_port)
+    if not args.mock:
+        config_error = foundry_configuration_error(env)
+        if config_error:
+            print(config_error, file=sys.stderr)
+            return 2
     npm = shutil.which('npm')
     if not npm or not (ROOT / 'frontend/node_modules/next/package.json').is_file():
         print('Frontend dependencies missing. Run npm ci in frontend, then retry.', file=sys.stderr)
@@ -69,21 +130,8 @@ def main():
             print(f'Port {number} is unavailable. Stop the existing server or use --frontend-port / --backend-port.', file=sys.stderr)
             return 1
 
-    # Read only the checked-in example; never source shell code or create a secret file.
-    profile = ROOT / 'deploy' / ('demo.env.example' if args.mock else 'foundry-demo.env.example')
-    defaults = {}
-    for line in profile.read_text().splitlines():
-        if line.strip() and not line.lstrip().startswith('#'):
-            key, value = line.split('=', 1)
-            defaults[key] = value
-    env = {**defaults, **os.environ}
     frontend_url = f'http://127.0.0.1:{args.frontend_port}'
     backend_url = f'http://127.0.0.1:{args.backend_port}'
-    env.update(APP_ENV='local', APP_PUBLIC_DEMO='true', EVENT_SOURCE='local', APP_DEMO_CONTROLS='true', APP_AUTOSTART='false',
-               AGENTIC_MODE='mock' if args.mock else 'foundry',
-               APP_FOUNDRY_HERO_ONLY='false' if args.mock else 'true',
-               APP_FRONTEND_ORIGINS=frontend_url, NEXT_PUBLIC_API_BASE_URL=backend_url,NEXT_PUBLIC_DEMO_SESSIONS='true',
-               PYTHONUNBUFFERED='1')
     children = []
     stopping = False
 

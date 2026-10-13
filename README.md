@@ -124,10 +124,10 @@ Generated output is local and ignored by Git. For a containerized local run, use
 The launcher defaults to the Foundry hero demo when `--mock` is omitted. That mode can make real model-inference requests. Configure a valid project and deployed model and authenticate with an authorized Azure identity before using it. Do not run it merely to test the offline setup.
 
 ```sh
-cp deploy/foundry-demo.env.example .env.local
+test -e deploy/foundry-demo.env || cp deploy/foundry-demo.env.example deploy/foundry-demo.env
 ```
 
-The launcher does not automatically source `.env.local`; export the variables in your shell or use your preferred environment-file loader. Set `FOUNDRY_PROJECT_ENDPOINT` and `FOUNDRY_MODEL` to your own authorized deployment. Keep secrets out of the repository. Foundry availability, permissions, quota and cost depend on your Azure account.
+Set `FOUNDRY_PROJECT_ENDPOINT` and `FOUNDRY_MODEL` in `deploy/foundry-demo.env` to the existing authorized project and deployment. This local file is ignored by Git and is loaded only by `./start.sh` in its default Foundry mode. The checked-in example remains a placeholder template. Precedence is example defaults, then the local Foundry file, then exported process variables; the launcher applies its required Foundry mode, local replay, demo controls and selected frontend/API URLs last. Missing or invalid settings fail before either server starts, without displaying values. Authentication continues to use the existing Azure identity through `DefaultAzureCredential`. Foundry availability, permissions, quota and cost depend on your Azure account.
 
 ## Configuration reference
 
