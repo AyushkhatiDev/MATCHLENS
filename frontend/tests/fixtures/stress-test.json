@@ -1,0 +1,751 @@
+{
+  "point": {
+    "timestamp": 1200.0,
+    "state": "HOME_CONTROL",
+    "confidence": 0.95,
+    "evidence_ids": [
+      "evi_0004"
+    ],
+    "dimensions": [
+      {
+        "name": "Control",
+        "home": 61.5,
+        "away": 38.5,
+        "unit": "%",
+        "formula": "Team event share in the window; not possession duration"
+      },
+      {
+        "name": "Pressure",
+        "home": 35.0,
+        "away": 35.0,
+        "unit": "index",
+        "formula": "Existing engine pressure frequency/share index, 0\u2013100"
+      },
+      {
+        "name": "Territory",
+        "home": 91.7,
+        "away": 8.3,
+        "unit": "%",
+        "formula": "Team share of attacking-third actions"
+      },
+      {
+        "name": "Progression",
+        "home": 14.0,
+        "away": 8.0,
+        "unit": "actions",
+        "formula": "Existing progressive passes and forward carries"
+      },
+      {
+        "name": "Threat",
+        "home": 1.0,
+        "away": 0.0,
+        "unit": "shots",
+        "formula": "Observed shots; not expected goals"
+      },
+      {
+        "name": "Tempo",
+        "home": 18.2,
+        "away": 18.2,
+        "unit": "events/min",
+        "formula": "All events divided by nominal window minutes; shared match rhythm"
+      },
+      {
+        "name": "Stability",
+        "home": 83.3,
+        "away": 60.0,
+        "unit": "%",
+        "formula": "Successful passes / pass attempts; null when no passes"
+      },
+      {
+        "name": "Transition intensity",
+        "home": 15.0,
+        "away": 15.0,
+        "unit": "turnovers",
+        "formula": "Observed possession changes in the window; shared match value"
+      }
+    ],
+    "score": [
+      1,
+      0
+    ]
+  },
+  "choices": {
+    "timestamp": 1200,
+    "sequences": [
+      {
+        "sequence_id": "f2301282-43ab-4cbd-a0ec-585436057192",
+        "start": 904.4,
+        "end": 904.4,
+        "events": 2,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "102c1643-1169-4fa2-bb6a-eaf6a6f7095e",
+        "start": 904.4,
+        "end": 970.98,
+        "events": 16,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "afa4f874-aa46-4e84-8e31-b371b26398f0",
+        "start": 970.98,
+        "end": 977.5,
+        "events": 4,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "bf4da494-f03e-4601-932f-e5190670c3e4",
+        "start": 977.5,
+        "end": 989.65,
+        "events": 4,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "e1852239-61c4-4b0d-a7f8-323128cb2da7",
+        "start": 989.65,
+        "end": 992.06,
+        "events": 3,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "f58280aa-003c-4730-b1c9-811a89c4c5b6",
+        "start": 992.06,
+        "end": 1011.31,
+        "events": 6,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "start": 1011.31,
+        "end": 1055.08,
+        "events": 10,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "4b0e9b60-88a1-4a2e-a0a7-b88b62c5dd76",
+        "start": 1055.08,
+        "end": 1060.87,
+        "events": 3,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "be798283-0acb-431c-99c9-673b96d3f609",
+        "start": 1060.87,
+        "end": 1074.75,
+        "events": 5,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "899c3034-d60b-4df1-a4d7-3ccc33a8c682",
+        "start": 1074.75,
+        "end": 1087.38,
+        "events": 4,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "aec087fe-d2c8-4e47-92e7-f8d187ad8627",
+        "start": 1087.38,
+        "end": 1100.16,
+        "events": 5,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "aad38a6d-9461-4330-8a08-0ba8fdc6f3f0",
+        "start": 1100.16,
+        "end": 1121.96,
+        "events": 7,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "056a7cbc-5795-4589-b1e5-61212572e80d",
+        "start": 1121.96,
+        "end": 1127.16,
+        "events": 3,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "f27b66cf-a432-4bf6-b72d-5e309f4ef0bf",
+        "start": 1127.16,
+        "end": 1165.72,
+        "events": 9,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "f4a97f06-cd14-4185-9530-9e37786029bb",
+        "start": 1165.72,
+        "end": 1176.11,
+        "events": 4,
+        "team_id": "team_01"
+      },
+      {
+        "sequence_id": "61b86863-6ec6-4134-b9c1-d6b5a2ce8c56",
+        "start": 1176.11,
+        "end": 1185.6,
+        "events": 4,
+        "team_id": "team_00"
+      },
+      {
+        "sequence_id": "0f0aab44-25fb-4422-9800-501d420e5612",
+        "start": 1192.67,
+        "end": 1198.58,
+        "events": 2,
+        "team_id": "team_00"
+      }
+    ]
+  },
+  "flip": {
+    "sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+    "timestamp": 1200,
+    "window_seconds": 300,
+    "observed_state": "HOME_CONTROL",
+    "altered_state": "HIGH_PRESSURE",
+    "removed_event_ids": [
+      "04ce07ec-668a-4233-9967-4989112f2de3",
+      "0abd6fee-105f-413e-9fb9-135891d00882",
+      "28e0492e-6f92-4ab3-b4bc-b4629bb5cb15",
+      "6b724391-fdb3-4513-af83-c4d3f0f99162",
+      "d61c3462-cd18-4363-853c-59fe1e6a3188",
+      "7a186fa3-2bb6-498f-acc2-45e38db0c805",
+      "7aa2282b-708a-4ae5-9b71-be1a9047f141",
+      "b12f9e7a-fc3c-4587-8b4c-d8841cb2360e",
+      "e0e25ab5-3a5a-48ee-80d0-f3b5ddfbb876",
+      "e0cfe008-288b-49f6-9b42-a064cdc4489d"
+    ],
+    "observed": [
+      {
+        "name": "Control",
+        "home": 61.5,
+        "away": 38.5,
+        "unit": "%",
+        "formula": "Team event share in the window; not possession duration"
+      },
+      {
+        "name": "Pressure",
+        "home": 35.0,
+        "away": 35.0,
+        "unit": "index",
+        "formula": "Existing engine pressure frequency/share index, 0\u2013100"
+      },
+      {
+        "name": "Territory",
+        "home": 91.7,
+        "away": 8.3,
+        "unit": "%",
+        "formula": "Team share of attacking-third actions"
+      },
+      {
+        "name": "Progression",
+        "home": 14.0,
+        "away": 8.0,
+        "unit": "actions",
+        "formula": "Existing progressive passes and forward carries"
+      },
+      {
+        "name": "Threat",
+        "home": 1.0,
+        "away": 0.0,
+        "unit": "shots",
+        "formula": "Observed shots; not expected goals"
+      },
+      {
+        "name": "Tempo",
+        "home": 18.2,
+        "away": 18.2,
+        "unit": "events/min",
+        "formula": "All events divided by nominal window minutes; shared match rhythm"
+      },
+      {
+        "name": "Stability",
+        "home": 83.3,
+        "away": 60.0,
+        "unit": "%",
+        "formula": "Successful passes / pass attempts; null when no passes"
+      },
+      {
+        "name": "Transition intensity",
+        "home": 15.0,
+        "away": 15.0,
+        "unit": "turnovers",
+        "formula": "Observed possession changes in the window; shared match value"
+      }
+    ],
+    "without_sequence": [
+      {
+        "name": "Control",
+        "home": 64.2,
+        "away": 35.8,
+        "unit": "%",
+        "formula": "Team event share in the window; not possession duration"
+      },
+      {
+        "name": "Pressure",
+        "home": 15.8,
+        "away": 47.5,
+        "unit": "index",
+        "formula": "Existing engine pressure frequency/share index, 0\u2013100"
+      },
+      {
+        "name": "Territory",
+        "home": 91.4,
+        "away": 8.6,
+        "unit": "%",
+        "formula": "Team share of attacking-third actions"
+      },
+      {
+        "name": "Progression",
+        "home": 14.0,
+        "away": 3.0,
+        "unit": "actions",
+        "formula": "Existing progressive passes and forward carries"
+      },
+      {
+        "name": "Threat",
+        "home": 1.0,
+        "away": 0.0,
+        "unit": "shots",
+        "formula": "Observed shots; not expected goals"
+      },
+      {
+        "name": "Tempo",
+        "home": 16.2,
+        "away": 16.2,
+        "unit": "events/min",
+        "formula": "All events divided by nominal window minutes; shared match rhythm"
+      },
+      {
+        "name": "Stability",
+        "home": 83.3,
+        "away": 62.5,
+        "unit": "%",
+        "formula": "Successful passes / pass attempts; null when no passes"
+      },
+      {
+        "name": "Transition intensity",
+        "home": 14.0,
+        "away": 14.0,
+        "unit": "turnovers",
+        "formula": "Observed possession changes in the window; shared match value"
+      }
+    ],
+    "deltas": [
+      {
+        "name": "Control",
+        "home": 2.7,
+        "away": -2.7,
+        "unit": "%"
+      },
+      {
+        "name": "Pressure",
+        "home": -19.2,
+        "away": 12.5,
+        "unit": "index"
+      },
+      {
+        "name": "Territory",
+        "home": -0.3,
+        "away": 0.3,
+        "unit": "%"
+      },
+      {
+        "name": "Progression",
+        "home": 0.0,
+        "away": -5.0,
+        "unit": "actions"
+      },
+      {
+        "name": "Threat",
+        "home": 0.0,
+        "away": 0.0,
+        "unit": "shots"
+      },
+      {
+        "name": "Tempo",
+        "home": -2.0,
+        "away": -2.0,
+        "unit": "events/min"
+      },
+      {
+        "name": "Stability",
+        "home": 0.0,
+        "away": 2.5,
+        "unit": "%"
+      },
+      {
+        "name": "Transition intensity",
+        "home": -1.0,
+        "away": -1.0,
+        "unit": "turnovers"
+      }
+    ],
+    "caveat": "Simulation sensitivity, not a real-world causal claim.",
+    "method": "Existing engine five-minute calculation and classifier; time held fixed, all observed events carrying the selected sequence ID removed. Later events held fixed, not resimulated. Scoreline is not recalculated."
+  },
+  "unchanged": {
+    "sequence_id": "f2301282-43ab-4cbd-a0ec-585436057192",
+    "timestamp": 1200,
+    "window_seconds": 300,
+    "observed_state": "HOME_CONTROL",
+    "altered_state": "HOME_CONTROL",
+    "removed_event_ids": [
+      "982eeb14-85a6-4a76-9dc5-e95c28320932",
+      "7f5d8df5-a70f-49a9-a79f-a036f75962c2",
+      "ae519b30-1b7a-4b7d-89bb-d9ff88ee8693",
+      "f15ba962-9e94-4a8c-bde0-9523f9d18f0e",
+      "d58ee14d-0206-42ee-94a3-52840c13e040",
+      "73e1fbb9-1a8c-4bef-93e7-7c8705bc3d30"
+    ],
+    "observed": [
+      {
+        "name": "Control",
+        "home": 61.5,
+        "away": 38.5,
+        "unit": "%",
+        "formula": "Team event share in the window; not possession duration"
+      },
+      {
+        "name": "Pressure",
+        "home": 35.0,
+        "away": 35.0,
+        "unit": "index",
+        "formula": "Existing engine pressure frequency/share index, 0\u2013100"
+      },
+      {
+        "name": "Territory",
+        "home": 91.7,
+        "away": 8.3,
+        "unit": "%",
+        "formula": "Team share of attacking-third actions"
+      },
+      {
+        "name": "Progression",
+        "home": 14.0,
+        "away": 8.0,
+        "unit": "actions",
+        "formula": "Existing progressive passes and forward carries"
+      },
+      {
+        "name": "Threat",
+        "home": 1.0,
+        "away": 0.0,
+        "unit": "shots",
+        "formula": "Observed shots; not expected goals"
+      },
+      {
+        "name": "Tempo",
+        "home": 18.2,
+        "away": 18.2,
+        "unit": "events/min",
+        "formula": "All events divided by nominal window minutes; shared match rhythm"
+      },
+      {
+        "name": "Stability",
+        "home": 83.3,
+        "away": 60.0,
+        "unit": "%",
+        "formula": "Successful passes / pass attempts; null when no passes"
+      },
+      {
+        "name": "Transition intensity",
+        "home": 15.0,
+        "away": 15.0,
+        "unit": "turnovers",
+        "formula": "Observed possession changes in the window; shared match value"
+      }
+    ],
+    "without_sequence": [
+      {
+        "name": "Control",
+        "home": 61.8,
+        "away": 38.2,
+        "unit": "%",
+        "formula": "Team event share in the window; not possession duration"
+      },
+      {
+        "name": "Pressure",
+        "home": 35.0,
+        "away": 35.0,
+        "unit": "index",
+        "formula": "Existing engine pressure frequency/share index, 0\u2013100"
+      },
+      {
+        "name": "Territory",
+        "home": 94.3,
+        "away": 5.7,
+        "unit": "%",
+        "formula": "Team share of attacking-third actions"
+      },
+      {
+        "name": "Progression",
+        "home": 14.0,
+        "away": 8.0,
+        "unit": "actions",
+        "formula": "Existing progressive passes and forward carries"
+      },
+      {
+        "name": "Threat",
+        "home": 1.0,
+        "away": 0.0,
+        "unit": "shots",
+        "formula": "Observed shots; not expected goals"
+      },
+      {
+        "name": "Tempo",
+        "home": 17.8,
+        "away": 17.8,
+        "unit": "events/min",
+        "formula": "All events divided by nominal window minutes; shared match rhythm"
+      },
+      {
+        "name": "Stability",
+        "home": 83.3,
+        "away": 60.0,
+        "unit": "%",
+        "formula": "Successful passes / pass attempts; null when no passes"
+      },
+      {
+        "name": "Transition intensity",
+        "home": 14.0,
+        "away": 14.0,
+        "unit": "turnovers",
+        "formula": "Observed possession changes in the window; shared match value"
+      }
+    ],
+    "deltas": [
+      {
+        "name": "Control",
+        "home": 0.3,
+        "away": -0.3,
+        "unit": "%"
+      },
+      {
+        "name": "Pressure",
+        "home": 0.0,
+        "away": 0.0,
+        "unit": "index"
+      },
+      {
+        "name": "Territory",
+        "home": 2.6,
+        "away": -2.6,
+        "unit": "%"
+      },
+      {
+        "name": "Progression",
+        "home": 0.0,
+        "away": 0.0,
+        "unit": "actions"
+      },
+      {
+        "name": "Threat",
+        "home": 0.0,
+        "away": 0.0,
+        "unit": "shots"
+      },
+      {
+        "name": "Tempo",
+        "home": -0.4,
+        "away": -0.4,
+        "unit": "events/min"
+      },
+      {
+        "name": "Stability",
+        "home": 0.0,
+        "away": 0.0,
+        "unit": "%"
+      },
+      {
+        "name": "Transition intensity",
+        "home": -1.0,
+        "away": -1.0,
+        "unit": "turnovers"
+      }
+    ],
+    "caveat": "Simulation sensitivity, not a real-world causal claim.",
+    "method": "Existing engine five-minute calculation and classifier; time held fixed, all observed events carrying the selected sequence ID removed. Later events held fixed, not resimulated. Scoreline is not recalculated."
+  },
+  "sources": {
+    "timestamp": 1200,
+    "sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+    "total": 10,
+    "next_offset": null,
+    "events": [
+      {
+        "event_id": "04ce07ec-668a-4233-9967-4989112f2de3",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1011.31,
+        "minute": 16,
+        "event_type": "RECOVERY",
+        "team_id": "team_01",
+        "player_id": "team_01_p05",
+        "start_x": 94.7,
+        "start_y": 40.57,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true
+      },
+      {
+        "event_id": "0abd6fee-105f-413e-9fb9-135891d00882",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1014.07,
+        "minute": 16,
+        "event_type": "TACKLE",
+        "team_id": "team_00",
+        "player_id": "team_00_p10",
+        "start_x": 94.7,
+        "start_y": 40.57,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "target_player_id": "team_01_p05",
+        "successful": false
+      },
+      {
+        "event_id": "28e0492e-6f92-4ab3-b4bc-b4629bb5cb15",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1016.26,
+        "minute": 16,
+        "event_type": "CARRY",
+        "team_id": "team_01",
+        "player_id": "team_01_p05",
+        "start_x": 94.7,
+        "start_y": 40.57,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "end_x": 88.84,
+        "end_y": 45.39,
+        "distance_meters": 7.59,
+        "successful": true
+      },
+      {
+        "event_id": "6b724391-fdb3-4513-af83-c4d3f0f99162",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1023.91,
+        "minute": 17,
+        "event_type": "CARRY",
+        "team_id": "team_01",
+        "player_id": "team_01_p05",
+        "start_x": 88.84,
+        "start_y": 45.39,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "end_x": 83.72,
+        "end_y": 51.32,
+        "distance_meters": 7.83,
+        "successful": true
+      },
+      {
+        "event_id": "d61c3462-cd18-4363-853c-59fe1e6a3188",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1031.15,
+        "minute": 17,
+        "event_type": "PASS",
+        "team_id": "team_01",
+        "player_id": "team_01_p05",
+        "start_x": 83.72,
+        "start_y": 51.32,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "receiver_player_id": "team_01_p08",
+        "end_x": 58.78,
+        "end_y": 60.25,
+        "distance_meters": 26.49,
+        "successful": true,
+        "pressure_level": 0.1777,
+        "progressive": true,
+        "difficulty": 0.2522
+      },
+      {
+        "event_id": "7a186fa3-2bb6-498f-acc2-45e38db0c805",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1038.88,
+        "minute": 17,
+        "event_type": "PRESSURE",
+        "team_id": "team_00",
+        "player_id": "team_00_p09",
+        "start_x": 58.78,
+        "start_y": 60.25,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "pressing_team_id": "team_00",
+        "target_team_id": "team_01",
+        "target_player_id": "team_01_p08",
+        "intensity": 0.4863,
+        "zone": "middle_right",
+        "duration_seconds": 3.77,
+        "successful": false
+      },
+      {
+        "event_id": "7aa2282b-708a-4ae5-9b71-be1a9047f141",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1045.91,
+        "minute": 17,
+        "event_type": "PRESSURE",
+        "team_id": "team_00",
+        "player_id": "team_00_p04",
+        "start_x": 58.78,
+        "start_y": 60.25,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "pressing_team_id": "team_00",
+        "target_team_id": "team_01",
+        "target_player_id": "team_01_p08",
+        "intensity": 0.7788,
+        "zone": "middle_right",
+        "duration_seconds": 2.53,
+        "successful": true
+      },
+      {
+        "event_id": "b12f9e7a-fc3c-4587-8b4c-d8841cb2360e",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1049.88,
+        "minute": 17,
+        "event_type": "CARRY",
+        "team_id": "team_01",
+        "player_id": "team_01_p08",
+        "start_x": 58.78,
+        "start_y": 60.25,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "end_x": 49.46,
+        "end_y": 65.49,
+        "distance_meters": 10.69,
+        "successful": true
+      },
+      {
+        "event_id": "e0e25ab5-3a5a-48ee-80d0-f3b5ddfbb876",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1055.08,
+        "minute": 17,
+        "event_type": "PASS",
+        "team_id": "team_01",
+        "player_id": "team_01_p08",
+        "start_x": 49.46,
+        "start_y": 65.49,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "receiver_player_id": null,
+        "end_x": 25.13,
+        "end_y": 59.51,
+        "distance_meters": 25.05,
+        "successful": false,
+        "pressure_level": 0.2789,
+        "progressive": true,
+        "difficulty": 0.3144
+      },
+      {
+        "event_id": "e0cfe008-288b-49f6-9b42-a064cdc4489d",
+        "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+        "timestamp": 1055.08,
+        "minute": 17,
+        "event_type": "POSSESSION_CHANGE",
+        "team_id": "team_00",
+        "player_id": null,
+        "start_x": 49.46,
+        "start_y": 65.49,
+        "possession_sequence_id": "37a664fc-86cf-4c2f-b07f-44f6afe57b27",
+        "synthetic": true,
+        "from_team_id": "team_01",
+        "to_team_id": "team_00",
+        "cause": "failed_pass"
+      }
+    ]
+  }
+}

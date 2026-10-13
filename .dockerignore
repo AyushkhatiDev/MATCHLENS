@@ -1,0 +1,56 @@
+# Credentials and local identity state
+.env
+.env.*
+**/.env.*
+!**/.env.example
+.azure
+.msal
+*.pem
+*.key
+*.pfx
+*.p12
+*.p8
+*.cer
+*.crt
+
+# Machine-specific deployment exports
+deploy/phase9-api.json
+deploy/phase9-api.yaml
+deploy/phase9-web.json
+deploy/phase9-web.yaml
+
+# Python and JavaScript development state
+.git
+.venv
+venv
+env
+**/__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+htmlcov
+frontend/node_modules
+frontend/.next
+frontend/*.tsbuildinfo
+
+# Diagnostics and personal verification artifacts
+docs/submission/*
+
+# Include only the deterministic default match fixture used by the API image.
+data/generated/*
+!data/generated/phase5
+data/generated/phase5/*
+!data/generated/phase5/seed99
+data/generated/phase5/seed99/*
+!data/generated/phase5/seed99/match.jsonl
+!data/generated/phase5/seed99/match_meta.json
+
+*.log
+*.trace
+*.har
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+.DS_Store
+Thumbs.db

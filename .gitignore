@@ -1,0 +1,72 @@
+# Local configuration and credentials. Keep only empty/safe templates.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.p8
+*.cer
+*.crt
+*.jks
+*.keystore
+.azure/
+.msal/
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node and Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Generated match data: publish only the small default synthetic demo input.
+/data/generated/**
+!/data/generated/phase5/
+!/data/generated/phase5/seed99/
+!/data/generated/phase5/seed99/match.jsonl
+!/data/generated/phase5/seed99/match_meta.json
+
+# Run outputs, receipts, screenshots and phase audit materials are local.
+/docs/submission/**
+# Machine-specific Azure deployment exports (not reusable templates).
+/deploy/phase9-api.json
+/deploy/phase9-api.yaml
+/deploy/phase9-web.json
+/deploy/phase9-web.yaml
+*.log
+*.trace
+*.har
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# Developer/editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+frontend/AGENTS.md
+frontend/CLAUDE.md

@@ -1,0 +1,2078 @@
+{
+  "$defs": {
+    "EventType": {
+      "description": "Catalogue of recognised event types.",
+      "enum": [
+        "MATCH_START",
+        "HALF_TIME",
+        "SECOND_HALF_START",
+        "MATCH_END",
+        "PASS",
+        "SHOT",
+        "TACKLE",
+        "POSSESSION_CHANGE",
+        "PRESSURE",
+        "CARRY",
+        "INTERCEPTION",
+        "RECOVERY",
+        "CROSS",
+        "FOUL",
+        "CORNER",
+        "FREE_KICK",
+        "GOAL_KICK",
+        "GOAL"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "MatchEvent": {
+      "description": "Base event \u2014 every event in the match stream inherits these fields.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "MATCH_START",
+            "HALF_TIME",
+            "SECOND_HALF_START",
+            "MATCH_END"
+          ]
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "MatchEvent",
+      "type": "object"
+    },
+    "PassEvent": {
+      "description": "A pass between two players.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "PASS"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "receiver_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Receiver Player Id"
+        },
+        "end_x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "End X",
+          "type": "number"
+        },
+        "end_y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "End Y",
+          "type": "number"
+        },
+        "distance_meters": {
+          "minimum": 0.0,
+          "title": "Distance Meters",
+          "type": "number"
+        },
+        "successful": {
+          "default": true,
+          "title": "Successful",
+          "type": "boolean"
+        },
+        "pressure_level": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pressure Level",
+          "type": "number"
+        },
+        "progressive": {
+          "default": false,
+          "title": "Progressive",
+          "type": "boolean"
+        },
+        "difficulty": {
+          "default": 0.5,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Difficulty",
+          "type": "number"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "end_x",
+        "end_y",
+        "distance_meters",
+        "event_type"
+      ],
+      "title": "PassEvent",
+      "type": "object"
+    },
+    "BodyPart": {
+      "enum": [
+        "right_foot",
+        "left_foot",
+        "head"
+      ],
+      "title": "BodyPart",
+      "type": "string"
+    },
+    "ShotOutcome": {
+      "enum": [
+        "goal",
+        "saved",
+        "blocked",
+        "off_target"
+      ],
+      "title": "ShotOutcome",
+      "type": "string"
+    },
+    "ShotEvent": {
+      "description": "A shot on goal.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "SHOT"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "end_x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "End X",
+          "type": "number"
+        },
+        "end_y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "End Y",
+          "type": "number"
+        },
+        "shot_distance_meters": {
+          "minimum": 0.0,
+          "title": "Shot Distance Meters",
+          "type": "number"
+        },
+        "shot_speed_kph": {
+          "anyOf": [
+            {
+              "maximum": 200.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shot Speed Kph"
+        },
+        "body_part": {
+          "$ref": "#/$defs/BodyPart",
+          "default": "right_foot"
+        },
+        "under_pressure": {
+          "default": false,
+          "title": "Under Pressure",
+          "type": "boolean"
+        },
+        "outcome": {
+          "$ref": "#/$defs/ShotOutcome",
+          "default": "off_target"
+        },
+        "shot_quality": {
+          "default": 0.5,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Shot Quality",
+          "type": "number"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "end_x",
+        "end_y",
+        "shot_distance_meters",
+        "event_type"
+      ],
+      "title": "ShotEvent",
+      "type": "object"
+    },
+    "TackleEvent": {
+      "description": "A tackle attempt.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "TACKLE"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "target_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Player Id"
+        },
+        "successful": {
+          "default": true,
+          "title": "Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "TackleEvent",
+      "type": "object"
+    },
+    "PressureEvent": {
+      "description": "Pressure applied to the ball-carrier.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "PRESSURE"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "pressing_team_id": {
+          "default": "",
+          "title": "Pressing Team Id",
+          "type": "string"
+        },
+        "target_team_id": {
+          "default": "",
+          "title": "Target Team Id",
+          "type": "string"
+        },
+        "target_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Player Id"
+        },
+        "intensity": {
+          "default": 0.5,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Intensity",
+          "type": "number"
+        },
+        "zone": {
+          "default": "middle_central",
+          "title": "Zone",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "default": 2.0,
+          "minimum": 0.0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "successful": {
+          "default": false,
+          "title": "Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "PressureEvent",
+      "type": "object"
+    },
+    "CarryEvent": {
+      "description": "A player carrying (dribbling) the ball.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "CARRY"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "end_x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "End X",
+          "type": "number"
+        },
+        "end_y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "End Y",
+          "type": "number"
+        },
+        "distance_meters": {
+          "minimum": 0.0,
+          "title": "Distance Meters",
+          "type": "number"
+        },
+        "successful": {
+          "default": true,
+          "title": "Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "end_x",
+        "end_y",
+        "distance_meters",
+        "event_type"
+      ],
+      "title": "CarryEvent",
+      "type": "object"
+    },
+    "InterceptionEvent": {
+      "description": "An interception by the defending team.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "INTERCEPTION"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "intercepting_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intercepting Player Id"
+        },
+        "successful": {
+          "default": true,
+          "title": "Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "InterceptionEvent",
+      "type": "object"
+    },
+    "RecoveryEvent": {
+      "description": "A ball recovery.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "RECOVERY"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "RecoveryEvent",
+      "type": "object"
+    },
+    "CrossEvent": {
+      "description": "A cross into the box.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "CROSS"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "end_x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "End X",
+          "type": "number"
+        },
+        "end_y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "End Y",
+          "type": "number"
+        },
+        "successful": {
+          "default": true,
+          "title": "Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "end_x",
+        "end_y",
+        "event_type"
+      ],
+      "title": "CrossEvent",
+      "type": "object"
+    },
+    "FoulEvent": {
+      "description": "A foul committed.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "FOUL"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "fouled_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fouled Player Id"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "FoulEvent",
+      "type": "object"
+    },
+    "CornerEvent": {
+      "description": "A corner kick.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "CORNER"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "CornerEvent",
+      "type": "object"
+    },
+    "FreeKickEvent": {
+      "description": "A free kick.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "FREE_KICK"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "FreeKickEvent",
+      "type": "object"
+    },
+    "GoalKickEvent": {
+      "description": "A goal kick.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "GOAL_KICK"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "GoalKickEvent",
+      "type": "object"
+    },
+    "PossessionChangeEvent": {
+      "description": "Signals a change of possession from one team to the other.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "POSSESSION_CHANGE"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "from_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From Team Id"
+        },
+        "to_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To Team Id"
+        },
+        "cause": {
+          "default": "turnover",
+          "title": "Cause",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "event_type"
+      ],
+      "title": "PossessionChangeEvent",
+      "type": "object"
+    },
+    "GoalEvent": {
+      "description": "Explicit goal event for easy downstream filtering.",
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Simulation time in seconds from kick-off.",
+          "minimum": 0.0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "minute": {
+          "description": "Match minute (0-indexed display minute).",
+          "minimum": 0,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "event_type": {
+          "type": "string",
+          "const": "GOAL"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "start_x": {
+          "anyOf": [
+            {
+              "maximum": 105.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start X"
+        },
+        "start_y": {
+          "anyOf": [
+            {
+              "maximum": 68.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Y"
+        },
+        "possession_sequence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Sequence Id"
+        },
+        "synthetic": {
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "scorer_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scorer Player Id"
+        },
+        "assist_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assist Player Id"
+        },
+        "home_score": {
+          "minimum": 0,
+          "title": "Home Score",
+          "type": "integer"
+        },
+        "away_score": {
+          "minimum": 0,
+          "title": "Away Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "event_id",
+        "match_id",
+        "timestamp",
+        "minute",
+        "home_score",
+        "away_score",
+        "event_type"
+      ],
+      "title": "GoalEvent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "match_id": {
+      "minLength": 1,
+      "title": "Match Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "simulation_timestamp": {
+      "minimum": 0,
+      "title": "Simulation Timestamp",
+      "type": "number"
+    },
+    "produced_at": {
+      "format": "date-time",
+      "title": "Produced At",
+      "type": "string"
+    },
+    "sequence_number": {
+      "minimum": 0,
+      "title": "Sequence Number",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PassEvent"
+        },
+        {
+          "$ref": "#/$defs/ShotEvent"
+        },
+        {
+          "$ref": "#/$defs/TackleEvent"
+        },
+        {
+          "$ref": "#/$defs/PressureEvent"
+        },
+        {
+          "$ref": "#/$defs/CarryEvent"
+        },
+        {
+          "$ref": "#/$defs/InterceptionEvent"
+        },
+        {
+          "$ref": "#/$defs/RecoveryEvent"
+        },
+        {
+          "$ref": "#/$defs/CrossEvent"
+        },
+        {
+          "$ref": "#/$defs/FoulEvent"
+        },
+        {
+          "$ref": "#/$defs/CornerEvent"
+        },
+        {
+          "$ref": "#/$defs/FreeKickEvent"
+        },
+        {
+          "$ref": "#/$defs/GoalKickEvent"
+        },
+        {
+          "$ref": "#/$defs/PossessionChangeEvent"
+        },
+        {
+          "$ref": "#/$defs/GoalEvent"
+        },
+        {
+          "$ref": "#/$defs/MatchEvent"
+        }
+      ]
+    },
+    "source": {
+      "default": "local_replay",
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    },
+    "correlation_id": {
+      "minLength": 1,
+      "title": "Correlation Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "match_id",
+    "event_type",
+    "simulation_timestamp",
+    "produced_at",
+    "sequence_number",
+    "schema_version",
+    "payload",
+    "correlation_id"
+  ],
+  "title": "EventEnvelope",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,50 @@
+import React from 'react';
+import {describe,it,expect,vi} from 'vitest';
+import {render,screen,fireEvent,waitFor,act} from '@testing-library/react';
+import {readFileSync} from 'node:fs';
+import {snapshotSchema,insightSchema,defaultPreferences,Message,Snapshot} from '../lib/types';
+import {applyMessage,parseMessage,savePreferences,readPreferences} from '../lib/realtime';
+import {loadMatch} from '../lib/api';
+import {clock} from '../lib/format';
+import Experience,{ExplanationPanel,EvidencePanel,Broadcast,overlayPayload} from '../components/experience';
+const actual=JSON.parse(readFileSync('../data/generated/phase5/paced/agent_results.json','utf8'))[0];
+const insight=insightSchema.parse({insight_id:actual.live_moment_key,moment:actual.result.state.triggered_moment,explanation:actual.result.state.explanation_context,evidence:actual.result.state.evidence,source_events:[],agent_explanation:actual.result.explanation,narrative:actual.result.narrative,workflow_status:actual.result.workflow_status,trace_id:actual.result.trace_id});
+const intel=JSON.parse(readFileSync('../data/generated/phase5/paced/match_intelligence.json','utf8'));
+const snapshot=snapshotSchema.parse({match:{match_id:intel.match_id,home:{team_id:intel.home_team.team_id,name:intel.home_team.team_name,short_name:'HOME'},away:{team_id:intel.away_team.team_id,name:intel.away_team.team_name,short_name:'AWAY'},competition:'Synthetic',venue:'Synthetic venue',synthetic:true,runtime_mode:'mock'},state:{status:'paused',simulation_time:actual.current_time,home_score:1,away_score:0,total_events:intel.summary.total_events,speed:100,tactical_state:intel.tactical_states[0],home_team:intel.home_team,away_team:intel.away_team,players:intel.players,windows:intel.rolling_windows,possession_player_id:null},events:[],insights:[insight],stream_cursor:10});
+vi.mock('../lib/api',()=>({base:'http://localhost:8000',loadMatch:vi.fn(async()=>snapshot),control:vi.fn(async()=>undefined)}));
+class MockEvents{static latest:MockEvents;onopen:(()=>void)|null=null;onerror:(()=>void)|null=null;onmessage:((event:{data:string})=>void)|null=null;close=vi.fn();constructor(){MockEvents.latest=this;} }
+vi.stubGlobal('EventSource',MockEvents);
+async function page(){render(<Experience demo/>);await screen.findByRole('heading',{name:intel.home_team.team_name});return MockEvents.latest;}
+describe('real output rendering',()=>{
+ it('renders backend explanation',()=>{render(<ExplanationPanel insight={insight} mode="analyst"/>);expect(screen.getByText(insight.agent_explanation!.what_happened)).toBeInTheDocument();expect(screen.getByText('What changed')).toBeInTheDocument();});
+ it('fan presentation retains backend narrative',()=>{render(<ExplanationPanel insight={insight} mode="fan"/>);expect(screen.getByText(insight.narrative!.summary)).toBeInTheDocument();});
+ it('renders evidence IDs and source details',()=>{render(<EvidencePanel insight={insight}/>);expect(screen.getByText(insight.evidence[0].evidence_id)).toBeInTheDocument();});
+ it('rejects malformed evidence at the boundary',()=>expect(insightSchema.safeParse({...insight,evidence:[{evidence_id:'invalid'}]}).success).toBe(false));
+ it('renders partial intelligence',()=>{render(<ExplanationPanel insight={{...insight,workflow_status:'PARTIAL'}} mode="analyst"/>);expect(screen.getByText('Partial intelligence')).toBeInTheDocument();});
+ it('renders safe unavailable explanation',()=>{render(<ExplanationPanel insight={{...insight,explanation:null,agent_explanation:null,narrative:null,workflow_status:'NO_EXPLANATION'}} mode="fan"/>);expect(screen.getByText(/No explanation available/)).toBeInTheDocument();});
+ it('broadcast preserves evidence and numeric payload',()=>{render(<Broadcast insight={insight}/>);expect(screen.getByText('Broadcast desk')).toBeInTheDocument();expect(overlayPayload(insight).evidence_ids).toEqual(insight.evidence.map(e=>e.evidence_id));});
+ it('overlay sizes change presentation only',()=>{render(<Broadcast insight={insight}/>);fireEvent.change(screen.getByLabelText('Overlay size'),{target:{value:'compact'}});expect(screen.getByText(insight.narrative!.headline)).toBeInTheDocument();});
+ it('page loads score and real connection state',async()=>{const source=await page();expect(screen.getByLabelText('Match score')).toHaveTextContent('1—0');source.onopen?.();await screen.findByText('CONNECTED');});
+ it('audience analyst reveals quantitative comparison',async()=>{await page();fireEvent.click(screen.getByRole('button',{name:'ANALYST'}));expect(screen.getByText('Match-to-date comparison')).toBeInTheDocument();});
+ it('player focus presents available metrics only',async()=>{await page();fireEvent.click(screen.getByRole('button',{name:'PLAYER'}));expect(screen.getByText(/Rolling player series unavailable/)).toBeInTheDocument();fireEvent.change(screen.getByLabelText('Focused player'),{target:{value:snapshot.state.players[1].player_id}});expect(readPreferences().favorite_player_id).toBe(snapshot.state.players[1].player_id);});
+ it('language offers an honest translation placeholder',async()=>{await page();fireEvent.change(screen.getByLabelText('Language'),{target:{value:'hi'}});expect(screen.getByText(/Narrative translation is not connected/)).toBeInTheDocument();});
+ it('connection errors visibly mark stale data',async()=>{const source=await page();source.onerror?.();await screen.findByText('RECONNECTING');expect(screen.getByText(/updates may be stale/)).toBeInTheDocument();});
+ it('backend failure renders a retryable error',async()=>{vi.mocked(loadMatch).mockRejectedValueOnce(new Error('unavailable'));render(<Experience demo/>);await screen.findByRole('heading',{name:'Backend unavailable'});expect(screen.getByRole('button',{name:'Retry connection'})).toBeInTheDocument();});
+ it('unmount closes the live subscription',async()=>{const view=render(<Experience demo/>);await screen.findByRole('heading',{name:intel.home_team.team_name});const source=MockEvents.latest;view.unmount();expect(source.close).toHaveBeenCalledOnce();});
+ it('incoming explained moment reaches panel and timeline',async()=>{const source=await page();const next={...insight,insight_id:'incoming',moment:{...insight.moment,timestamp:6000},narrative:{...insight.narrative!,headline:'Incoming verified moment'}};source.onmessage?.({data:JSON.stringify({type:'NARRATIVE_READY',match_id:intel.match_id,timestamp:6000,sequence_number:11,trace_id:null,payload:next})});await screen.findByRole('heading',{name:'Incoming verified moment',level:2});expect(screen.getByText('2 significant moments · chronological')).toBeInTheDocument();});
+ it('repeated reconnect attempts do not reset the offline deadline',async()=>{const source=await page();vi.useFakeTimers();try{act(()=>source.onerror?.());act(()=>vi.advanceTimersByTime(6000));act(()=>source.onerror?.());act(()=>vi.advanceTimersByTime(4000));expect(screen.getByText('OFFLINE')).toBeInTheDocument();act(()=>source.onopen?.());expect(screen.getByText('CONNECTED')).toBeInTheDocument();}finally{vi.useRealTimers();}});
+ it('deployment disables browser replay controls',async()=>{vi.mocked(loadMatch).mockResolvedValueOnce({...snapshot,match:{...snapshot.match,demo_controls:false}});await page();expect(screen.getByRole('button',{name:'Resume'})).toBeDisabled();expect(screen.getByRole('button',{name:'100x'})).toBeDisabled();});
+ it('malformed stream update leaves verified page intact',async()=>{const source=await page();source.onmessage?.({data:'{}'});await screen.findByText(/invalid update was rejected/);expect(screen.getByLabelText('Match score')).toBeInTheDocument();});
+});
+describe('bounded stream state and persistence',()=>{
+ it('appends incoming events with a 200-event bound',()=>{let data:Snapshot=snapshot;for(let i=11;i<250;i++)data=applyMessage(data,{type:'EVENT_RECEIVED',match_id:intel.match_id,timestamp:i,sequence_number:i,trace_id:null,payload:{event_id:String(i),match_id:intel.match_id,event_type:'PASS',timestamp:i}});expect(data.events).toHaveLength(200);});
+ it('incoming moment enters the timeline and panel dataset',()=>{const message:Message={type:'MOMENT_DETECTED',match_id:intel.match_id,timestamp:insight.moment.timestamp,sequence_number:11,trace_id:null,payload:{...insight,insight_id:'next'}};expect(applyMessage(snapshot,message).insights.at(-1)?.insight_id).toBe('next');});
+ it('ignores another match and duplicate sequence',()=>{expect(applyMessage(snapshot,{type:'MATCH_STATE_UPDATED',match_id:'other',timestamp:0,sequence_number:11,trace_id:null,payload:snapshot.state})).toBe(snapshot);});
+ it('backend restart replaces a higher old cursor',()=>{const reset:Message={type:'RESET',match_id:intel.match_id,timestamp:0,sequence_number:0,trace_id:null,payload:{...snapshot,stream_cursor:0,state:{...snapshot.state,total_events:0}}};expect(applyMessage(snapshot,reset).state.total_events).toBe(0);expect(applyMessage(snapshot,reset).stream_cursor).toBe(0);});
+ it('validates SSE schema',()=>expect(parseMessage('{"type":"INVALID"}').success).toBe(false));
+ it('persists preferences without changing data',()=>{savePreferences({...defaultPreferences,audience_mode:'analyst',language:'es'});expect(readPreferences().language).toBe('es');expect(snapshot.insights[0].evidence).toEqual(insight.evidence);});
+ it('invalid storage falls back safely',()=>{localStorage.setItem('matchlens.preferences','bad-json');expect(readPreferences()).toEqual(defaultPreferences);});
+ it('uses simulation time including fractional seconds',()=>expect(clock(1185.6)).toBe('19:45'));
+ it('ships reduced-motion and focus styles',()=>{const css=readFileSync('app/globals.css','utf8');expect(css).toContain('prefers-reduced-motion');expect(css).toContain(':focus-visible');});
+ it('client source contains no server credentials',()=>{for(const file of ['lib/api.ts','lib/realtime.ts','components/experience.tsx'])expect(readFileSync(file,'utf8')).not.toMatch(/AZURE_EVENT_HUB_CONNECTION_STRING|FOUNDRY_PROJECT_ENDPOINT|SharedAccessKey=/);});
+});

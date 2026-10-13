@@ -1,0 +1,209 @@
+{
+  "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+  "competition": "Synthetic Premier League",
+  "season": "2025-26",
+  "matchday": 1,
+  "date": "2025-09-14T15:00:00+00:00",
+  "venue": "Thornwick Lane",
+  "synthetic_data": true,
+  "random_seed": 99,
+  "duration_minutes": 90,
+  "home_team": {
+    "team_id": "team_00",
+    "name": "Northbridge City FC",
+    "short_name": "NBC",
+    "formation": "4-2-3-1",
+    "playing_style": "counter_attack",
+    "players": [
+      {
+        "player_id": "team_00_p00",
+        "name": "Marco Martinez",
+        "shirt_number": 1,
+        "position": "GK",
+        "preferred_foot": "right",
+        "role": "Goalkeeper"
+      },
+      {
+        "player_id": "team_00_p01",
+        "name": "Kylian Ferreira",
+        "shirt_number": 33,
+        "position": "RB",
+        "preferred_foot": "right",
+        "role": "Right-Back"
+      },
+      {
+        "player_id": "team_00_p02",
+        "name": "Stefan Larsson",
+        "shirt_number": 38,
+        "position": "CB",
+        "preferred_foot": "right",
+        "role": "Centre-Back"
+      },
+      {
+        "player_id": "team_00_p03",
+        "name": "Aiden Bakker",
+        "shirt_number": 15,
+        "position": "CB",
+        "preferred_foot": "right",
+        "role": "Centre-Back"
+      },
+      {
+        "player_id": "team_00_p04",
+        "name": "Nico Kim",
+        "shirt_number": 30,
+        "position": "LB",
+        "preferred_foot": "right",
+        "role": "Left-Back"
+      },
+      {
+        "player_id": "team_00_p05",
+        "name": "Cristian Ferreira",
+        "shirt_number": 29,
+        "position": "CDM",
+        "preferred_foot": "right",
+        "role": "Defensive Midfielder"
+      },
+      {
+        "player_id": "team_00_p06",
+        "name": "Diego Osei",
+        "shirt_number": 18,
+        "position": "CDM",
+        "preferred_foot": "right",
+        "role": "Defensive Midfielder"
+      },
+      {
+        "player_id": "team_00_p07",
+        "name": "Javier Martinez",
+        "shirt_number": 28,
+        "position": "RW",
+        "preferred_foot": "right",
+        "role": "Right Winger"
+      },
+      {
+        "player_id": "team_00_p08",
+        "name": "Lucas Uribe",
+        "shirt_number": 16,
+        "position": "CAM",
+        "preferred_foot": "left",
+        "role": "Attacking Midfielder"
+      },
+      {
+        "player_id": "team_00_p09",
+        "name": "Xavi Nilsen",
+        "shirt_number": 26,
+        "position": "LW",
+        "preferred_foot": "right",
+        "role": "Left Winger"
+      },
+      {
+        "player_id": "team_00_p10",
+        "name": "Zain Zimmerman",
+        "shirt_number": 21,
+        "position": "ST",
+        "preferred_foot": "left",
+        "role": "Striker"
+      }
+    ]
+  },
+  "away_team": {
+    "team_id": "team_01",
+    "name": "Ironhaven United",
+    "short_name": "IHU",
+    "formation": "4-1-4-1",
+    "playing_style": "direct",
+    "players": [
+      {
+        "player_id": "team_01_p00",
+        "name": "Theo Petrov",
+        "shirt_number": 1,
+        "position": "GK",
+        "preferred_foot": "right",
+        "role": "Goalkeeper"
+      },
+      {
+        "player_id": "team_01_p01",
+        "name": "Theo Uribe",
+        "shirt_number": 32,
+        "position": "RB",
+        "preferred_foot": "right",
+        "role": "Right-Back"
+      },
+      {
+        "player_id": "team_01_p02",
+        "name": "Andre Silva",
+        "shirt_number": 40,
+        "position": "CB",
+        "preferred_foot": "left",
+        "role": "Centre-Back"
+      },
+      {
+        "player_id": "team_01_p03",
+        "name": "Aiden Rossi",
+        "shirt_number": 24,
+        "position": "CB",
+        "preferred_foot": "left",
+        "role": "Centre-Back"
+      },
+      {
+        "player_id": "team_01_p04",
+        "name": "Oscar Andersen",
+        "shirt_number": 27,
+        "position": "LB",
+        "preferred_foot": "right",
+        "role": "Left-Back"
+      },
+      {
+        "player_id": "team_01_p05",
+        "name": "Edson Nilsen",
+        "shirt_number": 18,
+        "position": "CDM",
+        "preferred_foot": "left",
+        "role": "Defensive Midfielder"
+      },
+      {
+        "player_id": "team_01_p06",
+        "name": "Victor Evans",
+        "shirt_number": 39,
+        "position": "RM",
+        "preferred_foot": "right",
+        "role": "Right Midfielder"
+      },
+      {
+        "player_id": "team_01_p07",
+        "name": "Marco Garcia",
+        "shirt_number": 13,
+        "position": "CM",
+        "preferred_foot": "right",
+        "role": "Central Midfielder"
+      },
+      {
+        "player_id": "team_01_p08",
+        "name": "Rafael Nilsen",
+        "shirt_number": 19,
+        "position": "CM",
+        "preferred_foot": "right",
+        "role": "Central Midfielder"
+      },
+      {
+        "player_id": "team_01_p09",
+        "name": "Felix Hernandez",
+        "shirt_number": 2,
+        "position": "LM",
+        "preferred_foot": "right",
+        "role": "Left Midfielder"
+      },
+      {
+        "player_id": "team_01_p10",
+        "name": "Neylan Uribe",
+        "shirt_number": 28,
+        "position": "ST",
+        "preferred_foot": "right",
+        "role": "Striker"
+      }
+    ]
+  },
+  "final_score": {
+    "home": 1,
+    "away": 2
+  }
+}

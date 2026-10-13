@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matchlens"
+version = "0.1.0"
+description = "MatchLens — Deterministic football intelligence with evidence-grounded agent workflows"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "MatchLens Team"},
+]
+dependencies = [
+    "pydantic>=2.0,<3.0",
+]
+
+[project.optional-dependencies]
+agentic = [
+    "agent-framework-core==1.20.0",
+    "agent-framework-foundry==1.14.0",
+    "agent-framework-openai==1.15.0",
+    "azure-ai-projects==2.7.0",
+    "mcp==2.3.0",
+    "azure-identity==1.26.0",
+]
+realtime = [
+    "azure-eventhub==5.15.1",
+    "azure-identity==1.26.0",
+]
+presentation = [
+    "fastapi==0.142.2",
+    "uvicorn==0.54.0",
+]
+dev = [
+    "httpx>=0.28,<1",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = ["eventhub: requires real Event Hubs configuration and credentials (opt-in)", "foundry: requires real Foundry configuration and Azure credentials (opt-in)"]
+
+[tool.setuptools.packages.find]
+include = ["simulator*"]
+
+[tool.setuptools.package-data]
+"simulator.agentic" = ["prompts/*.md"]

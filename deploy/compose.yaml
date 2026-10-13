@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports: ["127.0.0.1:8001:8000"]
+    environment:
+      APP_ENV: demo
+      APP_FRONTEND_ORIGINS: http://127.0.0.1:3001,http://localhost:3001
+      APP_DIAGNOSTICS: "true"
+      AGENTIC_MODE: mock
+      EVENT_SOURCE: local
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+  web:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8001
+    ports: ["127.0.0.1:3001:3000"]
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]

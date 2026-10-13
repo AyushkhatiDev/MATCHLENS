@@ -1,0 +1,31 @@
+{
+  "event_id": "b8e3c71f-6bf0-4d62-b310-57ca7d411fab",
+  "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+  "event_type": "PRESSURE",
+  "simulation_timestamp": 2.52,
+  "produced_at": "2026-10-03T17:15:37.069236Z",
+  "sequence_number": 1,
+  "schema_version": "1.0",
+  "payload": {
+    "event_id": "b8e3c71f-6bf0-4d62-b310-57ca7d411fab",
+    "match_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4",
+    "timestamp": 2.52,
+    "minute": 0,
+    "event_type": "PRESSURE",
+    "team_id": "team_01",
+    "player_id": "team_01_p09",
+    "start_x": 52.5,
+    "start_y": 34.0,
+    "possession_sequence_id": "c28753f8-221c-4e00-bf99-31ee3af27f80",
+    "synthetic": true,
+    "pressing_team_id": "team_01",
+    "target_team_id": "team_00",
+    "target_player_id": "team_00_p03",
+    "intensity": 0.779,
+    "zone": "middle_central",
+    "duration_seconds": 2.62,
+    "successful": false
+  },
+  "source": "local_replay",
+  "correlation_id": "d67c4725-2894-4d6c-8aca-b5d0c169b0e4:1"
+}
