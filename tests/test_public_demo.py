@@ -51,6 +51,14 @@ def test_mock_public_demo_needs_no_foundry_and_never_reports_live():
         assert client.get(session['api_path']+'/api/data-plane').json()['foundry_status']=='MOCK'
 
 
+@pytest.mark.parametrize('env',[{'APP_FRONTEND_ORIGINS':'https://matchlens.example','AGENTIC_MODE':'mock'},ENV])
+def test_public_health_never_claims_event_hubs_verification(env):
+    # The public gateway always replays the recorded file and holds no Event Hubs evidence.
+    with TestClient(create_public_app(env)) as client:
+        event_hubs=client.get('/health').json()['event_hubs']
+    assert event_hubs=={'status':'UNVERIFIED','current_demo_input':'recorded local replay','continuous_connection':False}
+
+
 def test_restart_budget_preserves_pause_resume_and_speed():
     app=create_public_app(ENV)
     with TestClient(app) as client:

@@ -102,7 +102,7 @@ def create_public_app(env=None):
                      if i.execution and i.execution.mode=='foundry'),None)
         return {'status':'healthy','application':'running','production_demo':True,'database':'not_used',
                 'foundry':{'status':latest.status if latest else 'MOCK' if config.agent.mode=='mock' else 'FOUNDRY UNAVAILABLE','verified':bool(latest and latest.status=='FOUNDRY LIVE')},
-                'event_hubs':{'status':'HISTORICAL VERIFICATION','current_demo_input':'recorded local replay',
+                'event_hubs':{'status':'UNVERIFIED','current_demo_input':'recorded local replay',
                               'continuous_connection':False},
                 'data_plane':{'fabric':downstream_verification(),'current_input':'recorded local replay'},
                 'frontend_origin':origins[0],'active_sessions':len(sessions),'session_capacity':max_sessions,

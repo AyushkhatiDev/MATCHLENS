@@ -172,7 +172,7 @@ The API is built without access logs (`--no-access-log`). On Vercel, roll back f
 ## Integration status reporting
 
 - **Foundry:** `/health` reports `MOCK` in mock mode. In Foundry mode it reports `FOUNDRY UNAVAILABLE` until a session's hero moment completes; `verified: true` appears only after a genuine `FOUNDRY LIVE` result. The endpoint itself never calls Foundry.
-- **Event Hubs:** the public demo always replays the recorded local file. `/health` reports `continuous_connection: false` and the current input as "recorded local replay".
+- **Event Hubs:** the public demo always replays the recorded local file. `/health` reports status `UNVERIFIED`, `continuous_connection: false` and the current input as "recorded local replay".
 - **Fabric:** reported as `UNVERIFIED` unless a valid verification record is present, and the image does not include one.
 
 ## Cost notes
