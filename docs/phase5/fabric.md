@@ -1,8 +1,15 @@
-# Fabric readiness — prepared, no live Fabric connection verified
+# Fabric readiness — original Phase 5 setup notes
 
-This is a schema/setup guide. No Fabric workspace, Eventstream or Eventhouse has
-been provisioned or connected by this implementation. Azure Event Hubs transport
-is implemented and verified offline; live Azure verification is separately opt-in.
+> **Status update.** This page predates the bounded transport verification. For current
+> setup, verification and streaming, use [deploy/fabric-setup.md](../../deploy/fabric-setup.md).
+> The schema below (`MatchEnvelopeV1`, flattened columns) is **not** the schema the
+> verifiers rely on: they query `correlation_id` and the full `envelope` column (see
+> [deploy/fabric-schema.kql](../../deploy/fabric-schema.kql)). Those two columns are the
+> only ones a live run has confirmed; confirm the rest with
+> `.show table MatchEvents cslschema` before relying on them.
+
+This is a schema/setup guide. It was written before any Fabric workspace, Eventstream or
+Eventhouse was connected.
 
 The intended future path is Azure Event Hubs → Fabric Eventstream → Eventhouse
 KQL database → real-time queries. Eventstream can ingest and transform Event Hubs

@@ -28,6 +28,7 @@ agentic = [
 realtime = [
     "azure-eventhub==5.15.1",
     "azure-identity==1.26.0",
+    "httpx>=0.28,<1",
 ]
 presentation = [
     "fastapi==0.142.2",

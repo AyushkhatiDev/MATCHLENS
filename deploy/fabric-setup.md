@@ -39,6 +39,18 @@ python -m scripts.transport_verify             # one 375-message batch; writes d
 python -m scripts.transport_report             # offline: validates the record, writes docs/submission/transport-verification.md
 ```
 
+### Full-match reconciliation
+
+`simulator.live --mode azure --fabric-reconcile` publishes the **whole** seed-99 match (1,728 events) with correlation IDs `{run_id}:{sequence}`. It reads the match back on the readback consumer group and processes it with MatchLens agents (mock by default). It verifies the topology before publishing and queries `MatchEvents | where correlation_id startswith "<run_id>:"` afterwards. It then compares four event sets: published, Event Hubs readback, MatchLens processed, and Fabric. Duplicates from retries are reported; missing, extra or altered events fail the run. Connection strings are refused, and so is a readback group equal to `FABRIC_SOURCE_CONSUMER_GROUP`.
+
+```sh
+set -a; . ./.env.transport-verify; set +a
+python -m simulator.live --match data/generated/phase5/seed99/match.jsonl --mode azure --speed 100 --quiet \
+  --fabric-reconcile --record docs/submission/full-match-verification.json   # 1,728 messages; mock agents
+python -m scripts.transport_report --record docs/submission/full-match-verification.json \
+  --output docs/submission/full-match-verification.md
+```
+
 The record and report contain identifiers, counts and outcomes only. They stay in the Git-ignored `docs/submission/` folder. A verified record proves one bounded run at its timestamp, not continuous connectivity. The public demo still replays a recorded local file.
 
 The application reports a historical downstream check only when a valid local verification artifact is available. Traffic is not continuously monitored. A row query alone does not prove Eventstream ingestion; verify the correlated source replay and destination records. Do not describe separately executed Foundry, Event Hubs and Fabric checks as one combined live acceptance.

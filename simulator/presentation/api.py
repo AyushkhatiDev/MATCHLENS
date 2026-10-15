@@ -84,7 +84,9 @@ def create_app(path=DEFAULT_PATH,config=None):
             'processed_events':len(service.processor.matches[service.match.match_id].events),
             'processed_rate':sum(now-t<=10 for t in service.received_times)/10,
             'rate_window_seconds':10,'processed_rate_lower_bound':len(service.received_times)==service.received_times.maxlen and bool(service.received_times) and service.received_times[0]>now-10,'last_processed_at':service.received_at,
-            'namespace':config.azure.namespace if config.azure else None,'hub':config.azure.eventhub_name if config.azure else None,
+            # Resource names are operator diagnostics, never shown on public (diagnostics-off) deployments.
+            'namespace':config.azure.namespace if config.azure and config.diagnostics else None,
+            'hub':config.azure.eventhub_name if config.azure and config.diagnostics else None,
             'published_events':None,'eventstream_current_traffic':None,'downstream':service.downstream}
     @app.get('/api/matches/{mid}/sequences')
     async def sequences(mid:str,timestamp:float|None=Query(None,ge=0,allow_inf_nan=False)):

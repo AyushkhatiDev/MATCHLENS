@@ -18,9 +18,28 @@ from simulator.presentation.api import create_app, DEFAULT_PATH
 from simulator.presentation.preparation import HeroPreparation
 from simulator.presentation.temporal import downstream_verification
 from simulator.presentation.models import Control
+from simulator.production.streaming import StreamController, StreamRejected, StreamSettings
 
 
-def create_public_app(env=None):
+def forward(child,path,request,body=None):
+    """Dispatch to a child app through ASGI directly, keeping real StreamingResponse/SSE delivery."""
+    from starlette.responses import Response
+    scope=dict(request.scope)
+    scope.update(path='/'+path,raw_path=('/'+path).encode(),root_path='')
+    class ChildResponse(Response):
+        async def __call__(self,_scope,receive,send):
+            sent=False
+            async def replay_body():
+                nonlocal sent
+                if not sent:
+                    sent=True
+                    return {'type':'http.request','body':body,'more_body':False}
+                return await receive()
+            await child(scope,replay_body if body is not None else receive,send)
+    return ChildResponse()
+
+
+def create_public_app(env=None,*,producer_factory=None,fabric_factory=None):
     env=dict(os.environ if env is None else env)
     origins=env.get('APP_FRONTEND_ORIGINS','').split(',')
     local=env.get('APP_ENV')=='local'
@@ -34,6 +53,30 @@ def create_public_app(env=None):
     # Mock mode is an explicit no-cost public profile; /health and every execution record report MOCK, never live.
     sessions={};owners={};requests=deque(maxlen=500);jobs=asyncio.Semaphore(2)
     max_sessions=8;ttl=600
+    # Opt-in hosted streaming: one shared Event Hubs-fed match beside the per-browser recorded sessions.
+    try:stream_settings=StreamSettings.from_env(env)
+    except ValueError as error:raise ValueError(f'Streaming configuration invalid: {error}') from None
+    stream_child=controller=None;fabric_clients=[]
+    if stream_settings:
+        if env.get('APP_STREAM_AGENT_MODE','mock') not in ('mock','foundry'):raise ValueError('APP_STREAM_AGENT_MODE must be mock or foundry')
+        stream_config=AppConfig.from_env({**env,'APP_ENV':'demo','EVENT_SOURCE':'eventhub','APP_DEMO_CONTROLS':'false',
+            'APP_DIAGNOSTICS':'false','APP_AUTOSTART':'false','APP_FOUNDRY_HERO_ONLY':'false',
+            'AGENTIC_MODE':env.get('APP_STREAM_AGENT_MODE','mock')})
+        stream_child=create_app(DEFAULT_PATH,stream_config)
+
+        def default_fabric():
+            # Managed identity through DefaultAzureCredential; clients are closed at shutdown.
+            import httpx
+            from azure.identity.aio import DefaultAzureCredential
+            from simulator.production.transport import FabricReader
+            credential,client=DefaultAzureCredential(),httpx.AsyncClient(timeout=60)
+            fabric_clients.extend((credential,client))
+            return FabricReader(credential,client)
+
+        if producer_factory is None:
+            from simulator.realtime.azure import AzureEventHubProducer as producer_factory
+        controller=StreamController(stream_settings,stream_child.state.service,producer_factory=producer_factory,
+                                    fabric_factory=fabric_factory or default_fabric)
 
     async def expire():
         while True:
@@ -52,6 +95,10 @@ def create_public_app(env=None):
         finally:
             cleanup.cancel();await asyncio.gather(cleanup,return_exceptions=True)
             await asyncio.gather(*(app.state.service.close() for app,_ in sessions.values()))
+            if controller:
+                await controller.close();await stream_child.state.service.close()
+                for resource in fabric_clients:
+                    await asyncio.gather(resource.close() if hasattr(resource,'close') else resource.aclose(),return_exceptions=True)
 
     app=FastAPI(title='MatchLens public recorded demo',lifespan=lifespan)
     app.add_middleware(CORSMiddleware,allow_origins=origins,allow_methods=['GET','POST','DELETE'],
@@ -107,6 +154,9 @@ def create_public_app(env=None):
                 'data_plane':{'fabric':downstream_verification(),'current_input':'recorded local replay'},
                 'frontend_origin':origins[0],'active_sessions':len(sessions),'session_capacity':max_sessions,
                 'stream':{'status':'available','connection_seconds':config.stream_seconds},
+                'streaming':{'enabled':False} if not controller else {'enabled':True,'active':controller.active(),
+                    'run_state':controller.run.state if controller.run else None,
+                    'fabric':controller.run.fabric if controller.run else ('PENDING' if stream_settings.fabric else 'NOT CONFIGURED')},
                 'cloud_probe':'No outbound inference or data-plane probe performed by this endpoint.'}
 
     @app.post('/api/sessions',status_code=201)
@@ -162,23 +212,29 @@ def create_public_app(env=None):
                 if last and time.monotonic()-last<60:raise HTTPException(429,'Wait before restarting this demo')
                 service.public_last_start=time.monotonic()
         sessions[sid]=(child,time.monotonic())
-        scope=dict(request.scope)
-        scope.update(path='/'+path,raw_path=('/'+path).encode(),root_path='')
-        # Dispatch through ASGI directly to retain real StreamingResponse/SSE delivery.
-        from starlette.responses import Response
-        class SessionResponse(Response):
-            async def __call__(self,_scope,receive,send):
-                sent=False
-                async def replay_body():
-                    nonlocal sent
-                    if not sent:
-                        sent=True
-                        return {'type':'http.request','body':body,'more_body':False}
-                    return await receive()
-                await child(scope,replay_body if body is not None else receive,send)
-        return SessionResponse()
+        return forward(child,path,request,body)
+
+    @app.get('/api/stream/status')
+    async def stream_status():
+        if not controller:return {'enabled':False,'source_mode':'local'}
+        return controller.status()
+
+    @app.post('/api/stream/runs',status_code=202)
+    async def stream_run(request:Request):
+        if not controller:raise HTTPException(404,'Streaming is not enabled; recorded replay remains available')
+        origin(request)
+        try:return await controller.start()
+        except StreamRejected as rejected:raise HTTPException(rejected.status,rejected.reason) from None
+
+    @app.get('/stream/{path:path}')
+    async def stream_dispatch(path:str,request:Request):
+        # Read-only view of the shared streamed match; its replay controls are disabled.
+        if not stream_child:raise HTTPException(404,'Streaming is not enabled; recorded replay remains available')
+        origin(request)
+        return forward(stream_child,path,request)
 
     app.state.sessions=sessions
+    app.state.stream=controller
     return app
 
 
