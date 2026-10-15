@@ -8,7 +8,38 @@ MatchLens can send Event Hubs events to a Fabric Eventstream and Eventhouse. Thi
 2. Configure the Eventstream connection to read the intended hub and route events to the Eventhouse table. Check the envelope mapping against `fabric-schema.kql` and the event contract under `docs/phase5/`.
 3. Set the deployment-specific `FABRIC_WORKSPACE_ID`, `FABRIC_EVENTSTREAM_ID`, `FABRIC_EVENTHOUSE_ID`, `FABRIC_KQL_ENDPOINT` and `FABRIC_KQL_DATABASE` in the operator's private environment. These values are deliberately placeholders in `azure.env.example`.
 4. Authenticate as an identity with only the access needed to inspect the existing items and query the destination. Do not put access tokens, keys or connection strings in source control.
-5. Publish a fresh synthetic replay through the separately configured Event Hubs path, then query the Eventhouse for that replay's correlated event IDs, duplicate count and invalid-envelope count.
+5. Run the bounded transport verification below, which publishes one correlated synthetic batch and checks it in Event Hubs and the Eventhouse.
+
+## Bounded transport verification
+
+`scripts/transport_verify.py` proves one live run through Event Hubs → Eventstream → Eventhouse. It runs no agents and never calls Foundry.
+
+1. **Checks before writing anything.** It reads the Eventstream definition and its Event Hubs connection through the Fabric REST APIs, and requires all of these to match the configuration:
+   - the source namespace, hub and consumer group;
+   - the route to the Eventhouse destination;
+   - the destination's KQL database, its parent Eventhouse and Query URI;
+   - the `MatchEvents` table.
+
+   `AzureEventHub` and `AzureEventHubExtended` sources are accepted.
+2. **Publishes** the seed-99 match up to its first goal (374 events) plus one deliberate duplicate, all under a fresh run ID, signing in with Microsoft Entra ID only.
+3. **Reads back** on a dedicated consumer group, which must differ from Fabric's.
+4. **Queries** `MatchEvents` for the run ID, comparing whole event envelopes at each stage.
+
+Any mismatch, missing stage or timeout fails the run.
+
+Requirements:
+- The signed-in identity needs *Azure Event Hubs Data Sender* and *Data Receiver* scoped to the hub.
+- That identity also needs Fabric read and write permission on the Eventstream (required by the definition API), access to its connection, and query access to the database.
+- Put the identifiers in a Git-ignored `.env.*` file, and leave `AZURE_EVENT_HUB_CONNECTION_STRING` unset.
+
+```sh
+set -a; . ./.env.transport-verify; set +a
+python -m scripts.transport_verify --dry-run   # configuration only; no network
+python -m scripts.transport_verify             # one 375-message batch; writes docs/submission/transport-verification.json
+python -m scripts.transport_report             # offline: validates the record, writes docs/submission/transport-verification.md
+```
+
+The record and report contain identifiers, counts and outcomes only. They stay in the Git-ignored `docs/submission/` folder. A verified record proves one bounded run at its timestamp, not continuous connectivity. The public demo still replays a recorded local file.
 
 The application reports a historical downstream check only when a valid local verification artifact is available. Traffic is not continuously monitored. A row query alone does not prove Eventstream ingestion; verify the correlated source replay and destination records. Do not describe separately executed Foundry, Event Hubs and Fabric checks as one combined live acceptance.
 
