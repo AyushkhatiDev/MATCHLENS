@@ -114,6 +114,11 @@ class MatchService:
         self.control_lock = asyncio.Lock()
         self.guide_request = 0
         self.closed = False
+        # Hosted streaming run (Event Hubs input only): correlation filter and per-run delivery records.
+        self.stream_filter = None
+        self.stream_received = []
+        self.stream_processed = []
+        self.stream_errors = 0
 
     def state(self):
         adapter = self.processor.matches[self.match.match_id]
@@ -174,6 +179,12 @@ class MatchService:
         self.emit_insight('NARRATIVE_READY',insight,result.trace_id)
 
     async def on_event(self,envelope,status):
+        if self.stream_filter is not None:
+            if not isinstance(envelope,EventEnvelope): self.stream_errors+=1
+            else:
+                self.stream_received.append(envelope)
+                if status=='PROCESSED': self.stream_processed.append((envelope.match_id,envelope.event_id,envelope.sequence_number))
+                elif status!='DUPLICATE': self.stream_errors+=1
         if status != 'PROCESSED' or not isinstance(envelope,EventEnvelope): return
         from datetime import datetime, timezone
         self.received_at = datetime.now(timezone.utc).isoformat()
@@ -232,7 +243,8 @@ class MatchService:
     async def replay(self):
         if self.config.event_source == 'eventhub':
             from simulator.realtime.azure import AzureEventHubSource, AzureEventHubConsumer
-            self.source = AzureEventHubSource(AzureEventHubConsumer(self.config.azure))
+            ids,expected=self.stream_filter or (None,None)
+            self.source = AzureEventHubSource(AzureEventHubConsumer(self.config.azure),correlation_ids=ids,expected_event_count=expected)
         else:
             self.source = LocalReplaySource(self.path,1,sleep=self.delay)
         try:
@@ -270,6 +282,37 @@ class MatchService:
         self.wake.set()
         self.emit(Update,type='MATCH_STATE_UPDATED',payload=self.state())
         return self.state()
+
+    async def start_stream(self,correlation_ids,expected):
+        """Reset and start consuming one hosted streaming run from Event Hubs."""
+        if self.config.event_source!='eventhub':raise RuntimeError('Streaming runs need Event Hubs input')
+        async with self.control_lock:
+            if self.task and not self.task.done():raise RuntimeError('A run is already being consumed')
+            self.stream_filter=(set(correlation_ids),expected)
+            self.stream_received=[];self.stream_processed=[];self.stream_errors=0;self.source=None
+            return await self._control('start',100)
+
+    def stream_connected(self):
+        consumer=getattr(self.source,'consumer',None)
+        return bool(consumer and consumer.ready.is_set() and self.task and not self.task.done())
+
+    async def stream_ready(self,timeout):
+        async def connected():
+            while not self.stream_connected():
+                if self.task is None or self.task.done():return False
+                await asyncio.sleep(.05)
+            return True
+        try:return await asyncio.wait_for(connected(),timeout)
+        except TimeoutError:return False
+
+    async def stream_finished(self):
+        if self.task:await asyncio.gather(self.task,return_exceptions=True)
+
+    async def stop_stream(self):
+        if self.task and not self.task.done():
+            self.task.cancel();await asyncio.gather(self.task,return_exceptions=True)
+            self.status='error'
+            self.emit(Update,type='MATCH_STATE_UPDATED',payload=self.state())
 
     def subscribe(self,last_id=None):
         queue=asyncio.Queue(maxsize=64)

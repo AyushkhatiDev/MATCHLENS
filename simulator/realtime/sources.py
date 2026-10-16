@@ -14,6 +14,19 @@ class EventSource(ABC):
     @abstractmethod
     def events(self): ...
 
+async def correlated_replay(replay, run_id, source='azure_replay', published=None):
+    """Tag a started replay's envelopes with `{run_id}:{sequence}` for one publish run; optionally
+    record exactly what was handed to the publisher."""
+    async for envelope in replay.events():
+        if not isinstance(envelope, EventEnvelope):
+            raise ValueError('Replay input contains an invalid row; refusing to publish it')
+        tagged = EventEnvelope.model_validate({**envelope.model_dump(mode='json'),
+                                               'correlation_id': f'{run_id}:{envelope.sequence_number}', 'source': source})
+        if published is not None:
+            published.append(tagged)
+        yield tagged
+
+
 class LocalReplaySource(EventSource):
     def __init__(self, path, speed=1, *, sleep=asyncio.sleep):
         if not math.isfinite(speed) or speed < 0:

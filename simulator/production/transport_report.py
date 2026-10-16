@@ -69,7 +69,108 @@ def check(record):
     return record
 
 
+TOPOLOGY = {'source_name', 'source_type', 'source_consumer_group', 'source_start_position', 'connection_id',
+            'connection_type', 'connection_endpoint', 'connection_entity', 'connection_credential_type', 'destination_name',
+            'destination_table', 'kql_database_item_id', 'ingestion_mode', 'mapping_rule_name'}
+FULL_KEYS = {
+    '': {'kind', 'status', 'run_id', 'started_at', 'finished_at', 'scope', 'agent_runtime', 'foundry_called', 'source',
+         'eventhubs', 'fabric', 'reconciliation', 'failure'},
+    'source': {'generator', 'match_id', 'expected_events', 'speed'},
+    'eventhubs': {'namespace', 'eventhub', 'readback_consumer_group', 'auth', 'publish_acknowledged'},
+    'fabric': {'workspace_id', 'eventstream_id', 'eventhouse_id', 'kql_database', 'table', 'topology_verified'} | TOPOLOGY,
+    'reconciliation': {'expected', 'stages', 'reconciled'},
+}
+STAGE_KEYS = {'total', 'unique', 'missing', 'missing_sample', 'duplicates', 'unexpected', 'altered'}
+STAGE_NAMES = ('published', 'eventhub_readback', 'api_processed', 'fabric')
+
+
+def check_full(record):
+    """Validate a full-match record: every stage present and complete, nothing missing, invented or altered."""
+    for section, allowed in FULL_KEYS.items():
+        value = record if not section else record.get(section)
+        if not isinstance(value, dict) or set(value) != allowed:
+            raise EvidenceError(f'unexpected or missing fields in {section or "record"}')
+    if SECRET.search(json.dumps(record)):
+        raise EvidenceError('record contains credential-like text')
+    if record['kind'] != 'full_match_replay' or record['status'] != 'verified' or record['failure'] is not None:
+        raise EvidenceError('record is not a verified full-match run')
+    if not re.fullmatch(r'[0-9a-f]{32}', record['run_id']):
+        raise EvidenceError('run ID is not a 32-character hex identifier')
+    if record['agent_runtime'] not in ('mock', 'foundry') or record['foundry_called'] is not (record['agent_runtime'] == 'foundry'):
+        raise EvidenceError('agent runtime and Foundry claim are inconsistent')
+    started, finished = (datetime.fromisoformat(record[k]) for k in ('started_at', 'finished_at'))
+    if started.utcoffset() is None or finished < started:
+        raise EvidenceError('timestamps must be timezone-aware and ordered')
+    source, hubs, fabric, result = record['source'], record['eventhubs'], record['fabric'], record['reconciliation']
+    expected = source['expected_events']
+    if result['expected'] != expected or result['reconciled'] is not True or hubs['publish_acknowledged'] != expected:
+        raise EvidenceError('reconciliation does not cover the whole published match')
+    stages = result['stages']
+    if set(stages) != set(STAGE_NAMES):
+        raise EvidenceError('a pipeline stage is missing')
+    for name in STAGE_NAMES:
+        stage = stages[name]
+        if not isinstance(stage, dict) or set(stage) != STAGE_KEYS:
+            raise EvidenceError(f'stage {name} is incomplete')
+        if (stage['unique'], stage['missing'], stage['unexpected'], stage['altered']) != (expected, 0, 0, 0):
+            raise EvidenceError(f'stage {name} lost, invented or altered events')
+        if stage['total'] != stage['unique'] + stage['duplicates']:
+            raise EvidenceError(f'stage {name} counts are inconsistent')
+    if stages['published']['duplicates'] or stages['api_processed']['duplicates']:
+        raise EvidenceError('publisher and processor must handle each event exactly once')
+    if fabric['topology_verified'] is not True or hubs['readback_consumer_group'] == fabric['source_consumer_group']:
+        raise EvidenceError('topology must be verified and readback must use a separate consumer group')
+    if (fabric['connection_endpoint'], fabric['connection_entity']) != (hubs['namespace'], hubs['eventhub']) \
+            or fabric['destination_table'] != fabric['table']:
+        raise EvidenceError('Fabric topology does not match the published hub and queried table')
+    return record
+
+
+def render_full(record, *, record_sha256):
+    check_full(record)
+    source, hubs, fabric, stages = record['source'], record['eventhubs'], record['fabric'], record['reconciliation']['stages']
+    started, finished = (datetime.fromisoformat(record[k]) for k in ('started_at', 'finished_at'))
+    labels = {'published': 'Publisher (hosted replay)', 'eventhub_readback': f"Event Hubs readback (`{hubs['readback_consumer_group']}`)",
+              'api_processed': 'MatchLens processing', 'fabric': f"Fabric `{fabric['kql_database']}` / `{fabric['table']}`"}
+    table = '\n'.join(f"| {labels[n]} | {stages[n]['total']} | {stages[n]['unique']} | {stages[n]['duplicates']} | 0 | 0 |"
+                      for n in STAGE_NAMES)
+    ai = ('Agent workflows ran in **mock** mode; Microsoft Foundry was not called.' if record['agent_runtime'] == 'mock'
+          else 'Agent workflows ran against **Microsoft Foundry** during processing.')
+    return f"""# MatchLens full-match streaming evidence
+
+**Status: VERIFIED** · run `{record['run_id']}` · {started.strftime('%Y-%m-%d %H:%M:%S')} → {finished.strftime('%H:%M:%S')} UTC ({(finished - started).total_seconds():.1f} s)
+
+## What this proves
+
+The full recorded synthetic match `{source['match_id']}` ({source['expected_events']} events, replayed at {source['speed']}×) travelled
+**publisher → Azure Event Hubs → MatchLens processing** and **Event Hubs → Fabric Eventstream → Eventhouse** under one run ID
+(correlation IDs `{record['run_id']}:<sequence>`). The Fabric topology was verified before publishing.
+
+| Stage | Deliveries | Unique events | Duplicates | Missing | Altered |
+|---|---|---|---|---|---|
+{table}
+
+Every stage holds exactly the published event set. Duplicates come from at-least-once delivery and were not processed twice.
+
+## Verified Fabric topology
+
+- Source `{fabric['source_name']}` ({fabric['source_type']}) → `{fabric['connection_endpoint']}` / `{fabric['connection_entity']}`,
+  consumer group `{fabric['source_consumer_group']}`
+- Destination `{fabric['destination_name']}` → KQL database `{fabric['kql_database']}`, table `{fabric['destination_table']}`
+
+## Limits of this evidence
+
+- **One run, not continuous monitoring.**
+- {ai}
+- At-least-once delivery; no global ordering or exactly-once claim.
+
+Source record SHA-256 `{record_sha256}`. The record holds identifiers, counts and outcomes only.
+"""
+
+
 def render(record, *, record_sha256):
+    if record.get('kind') == 'full_match_replay':
+        return render_full(record, record_sha256=record_sha256)
     check(record)
     source, hubs, fabric = record['source'], record['eventhubs'], record['fabric']
     started, finished = (datetime.fromisoformat(record[k]) for k in ('started_at', 'finished_at'))

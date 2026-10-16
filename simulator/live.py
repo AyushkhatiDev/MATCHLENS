@@ -39,6 +39,8 @@ async def run(args):
     # Validate Azure settings before opening clients or generating any output.
     azure_config = None
     args.mode = resolve_mode(args.mode)
+    if getattr(args, 'fabric_reconcile', False) and args.mode != 'azure':
+        raise ValueError('Fabric reconciliation requires Azure mode')
     if args.mode == 'azure':
         from simulator.realtime.azure import AzureConfig
         azure_config = AzureConfig.from_env()
@@ -46,7 +48,6 @@ async def run(args):
     if args.agent_mode == 'mock':
         config = AgenticConfig(mode='mock')
     else:
-        import os
         config = AgenticConfig.from_env({**os.environ, 'AGENTIC_MODE': 'foundry'})
     async def result_callback(result):
         print('AGENTIC WORKFLOW RESULT', result.workflow_status, result.moment_id)
@@ -58,15 +59,20 @@ async def run(args):
             minute, second = divmod(int(event.simulation_timestamp), 60)
             print(f'{minute:02d}:{second:02d} {event.event_type.value} {status}')
     started = time.perf_counter()
+    record = None
     if args.mode == 'local':
         await run_pipeline(LocalReplaySource(args.match, args.speed), processor, event_callback=event_callback)
     else:
         from simulator.realtime.azure import AzureEventHubProducer, AzureEventHubConsumer, AzureEventHubSource
+        from simulator.realtime.sources import correlated_replay
         events = [parse_event(json.loads(line)) for line in Path(args.match).read_text().splitlines() if line.strip()]
         if any(e.match_id != match.match_id for e in events):
             raise ValueError('Azure demo input must belong to its configured match')
         if not events:
             raise ValueError('Azure replay input is empty')
+        fabric_group = os.getenv('FABRIC_SOURCE_CONSUMER_GROUP')
+        if fabric_group and azure_config.consumer_group == fabric_group:
+            raise ValueError('Readback consumer group must differ from the Fabric source consumer group')
         run_id = uuid.uuid4().hex
         correlations = {f'{run_id}:{index}' for index in range(len(events))}
         producer = AzureEventHubProducer(azure_config)
@@ -74,24 +80,42 @@ async def run(args):
         source = AzureEventHubSource(consumer, correlation_ids=correlations, expected_event_count=len(events))
         replay = LocalReplaySource(args.match, args.speed)
         published = 0
-        async def correlated_events():
-            async for envelope in replay.events():
-                yield EventEnvelope.model_validate({**envelope.model_dump(mode='json'),
-                    'correlation_id': f'{run_id}:{envelope.sequence_number}', 'source': 'azure_replay'})
+        sent, received, processed = [], [], []
+        async def recording_callback(event, status):
+            if isinstance(event, EventEnvelope):
+                received.append(event)
+                if status == 'PROCESSED':
+                    processed.append((event.match_id, event.event_id, event.sequence_number))
+            await event_callback(event, status)
         async def publish():
             nonlocal published
             await asyncio.wait_for(consumer.ready.wait(), azure_config.receive_timeout_seconds)
             await producer.start()
             await replay.start()
-            published = await producer.publish_stream(correlated_events())
+            published = await producer.publish_stream(correlated_replay(replay, run_id, published=sent))
             print(f'Event Hubs acknowledged {published} canonical replay events; Fabric receipt requires downstream verification.')
+        reconciler = (FullMatchReconciler(azure_config, run_id, match.match_id, len(events), args)
+                      if getattr(args, 'fabric_reconcile', False) else None)
         try:
+            if reconciler:
+                await reconciler.verify_topology()
             async with asyncio.TaskGroup() as group:
-                group.create_task(run_pipeline(source, processor, event_callback=event_callback))
+                group.create_task(run_pipeline(source, processor, event_callback=recording_callback))
                 group.create_task(publish())
+            if reconciler:
+                await reconciler.reconcile(sent, received, processed)
+        except BaseException as error:
+            if reconciler:
+                reconciler.fail(error)
+            raise
         finally:
             await replay.stop()
             await producer.stop()
+            if reconciler:
+                record = await reconciler.finish(published)
+                if args.record:
+                    Path(args.record).parent.mkdir(parents=True, exist_ok=True)
+                    Path(args.record).write_text(json.dumps(record, indent=2) + '\n')
     duration = time.perf_counter() - started
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
@@ -106,10 +130,76 @@ async def run(args):
     if args.mode == 'azure':
         measurement.update(events_published=published, replay_run_id=run_id,
                            namespace=azure_config.namespace, eventhub=azure_config.eventhub_name,
-                           fabric_verified=False)
+                           fabric_verified=bool(record and record['status'] == 'verified'))
     (output / 'metrics.json').write_text(json.dumps(measurement, indent=2))
     print(json.dumps(measurement, indent=2))
     return processor
+
+class FullMatchReconciler:
+    """Full-match Fabric reconciliation for --fabric-reconcile, reusing the transport verifier's
+    topology check, run-scoped KQL query and stage reconciliation. Entra ID only."""
+
+    def __init__(self, azure_config, run_id, match_id, expected, args, *, fabric=None, target=None, clock=None, sleep=asyncio.sleep):
+        from simulator.production.transport import FabricTarget, validate
+        self.target = target or FabricTarget.from_env()
+        validate(azure_config, self.target)
+        self.azure, self.run_id, self.match_id, self.expected, self.args = azure_config, run_id, match_id, expected, args
+        self.fabric, self.clock, self.sleep = fabric, clock, sleep
+        self.resources = []
+        self.started_at = datetime.now(timezone.utc).isoformat()
+        self.topology = None
+        self.reconciliation = None
+        self.failure = None
+        self.stage = 'topology'
+
+    def reader(self):
+        if self.fabric is None:
+            import httpx
+            from azure.identity.aio import DefaultAzureCredential
+            from simulator.production.transport import FabricReader
+            credential, client = DefaultAzureCredential(), httpx.AsyncClient(timeout=60)
+            self.resources = [credential, client]
+            self.fabric = FabricReader(credential, client)
+        return self.fabric
+
+    async def verify_topology(self):
+        from simulator.production.transport import verify_topology
+        self.topology = await verify_topology(self.reader(), self.azure, self.target)
+        self.stage = 'publish'
+
+    async def reconcile(self, sent, received, processed):
+        from simulator.production.transport import VerificationFailed, key, query_destination, reconcile
+        expected = {key(e): e for e in sent}
+        if len(expected) != self.expected:
+            raise VerificationFailed('publish', 'publisher did not hand over the whole match')
+        altered = sum(1 for e in received if expected.get(key(e)) not in (None, e))
+        self.stage = 'fabric_destination'
+        rows = await query_destination(self.reader(), self.target, expected, self.run_id, prefix=True, min_rows=len(expected),
+                                       timeout=self.args.fabric_timeout, interval=min(10.0, self.args.fabric_timeout / 10), sleep=self.sleep,
+                                       clock=self.clock or asyncio.get_running_loop().time)
+        self.reconciliation = reconcile(expected, {'published': ([key(e) for e in sent],),
+                                                   'eventhub_readback': ([key(e) for e in received], altered),
+                                                   'api_processed': (processed,), 'fabric': ([key(e) for e in rows],)})
+        if not self.reconciliation['reconciled']:
+            raise VerificationFailed('reconciling', 'stage event sets differ from the published match')
+
+    def fail(self, error):
+        from simulator.production.transport import VerificationFailed
+        if isinstance(error, VerificationFailed):
+            self.failure = {'stage': error.stage, 'reason': error.reason}
+        else:
+            # SDK errors can carry URLs or bodies; keep only the stage and exception type.
+            self.failure = {'stage': self.stage, 'reason': f'unexpected {type(error).__name__}'}
+
+    async def finish(self, published):
+        for resource in self.resources:
+            await asyncio.gather(resource.close() if hasattr(resource, 'close') else resource.aclose(), return_exceptions=True)
+        from simulator.production.transport import full_match_record
+        return full_match_record(run_id=self.run_id, started_at=self.started_at, match_id=self.match_id,
+                                 expected=self.expected, speed=self.args.speed, agent_mode=self.args.agent_mode,
+                                 azure=self.azure, target=self.target, topology=self.topology, published=published,
+                                 reconciliation=self.reconciliation, failure=self.failure)
+
 
 def resolve_mode(explicit=None):
     if explicit is not None:
@@ -139,7 +229,15 @@ def main(argv=None):
     parser.add_argument('--explain-notable', action='store_true')
     parser.add_argument('--quiet', action='store_true')
     parser.add_argument('--output', default='data/generated/phase5/live')
+    parser.add_argument('--fabric-reconcile', action='store_true',
+                        help='Azure mode only: verify Fabric topology before publishing, then reconcile the run in the Eventhouse')
+    parser.add_argument('--fabric-timeout', type=float, default=300)
+    parser.add_argument('--record', help='Write the sanitized full-match verification record here (with --fabric-reconcile)')
     args = parser.parse_args(argv)
+    if args.fabric_reconcile and args.mode == 'local':
+        parser.error('--fabric-reconcile requires --mode azure')
+    if args.record and not args.fabric_reconcile:
+        parser.error('--record requires --fabric-reconcile')
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     # Azure SDK loggers can emit service details; application traces deliberately
     # log safe error codes instead. SDK HTTP wire logging is disabled on clients.

@@ -219,9 +219,22 @@ async def read_back(readback, expected, run_id, timeout):
     return received
 
 
-async def query_destination(fabric, target, expected, run_id, *, timeout, interval, sleep, clock):
-    """Poll the Eventhouse table for this run until every event and the deliberate duplicate are present."""
-    csl = f'{target.table} | where correlation_id == "{run_id}" | project envelope'
+def in_run(correlation_id, run_id, prefix):
+    """Exact run ID (bounded transport batch) or `{run_id}:{sequence}` (full-match replay)."""
+    if not prefix:
+        return correlation_id == run_id
+    head, separator, sequence = correlation_id.partition(':')
+    return head == run_id and separator == ':' and sequence.isdigit()
+
+
+async def query_destination(fabric, target, expected, run_id, *, timeout, interval, sleep, clock, prefix=False, min_rows=None):
+    """Poll the Eventhouse table for this run until every expected event (and, for the bounded batch,
+    its deliberate duplicate) is present. Stored envelopes must equal the published ones."""
+    if not re.fullmatch(r'[0-9a-f]{32}', run_id):
+        raise VerificationFailed('configuration', 'run ID must be a 32-character hex identifier')
+    selector = f'startswith "{run_id}:"' if prefix else f'== "{run_id}"'
+    csl = f'{target.table} | where correlation_id {selector} | project envelope'
+    min_rows = len(expected) + 1 if min_rows is None else min_rows
     deadline = clock() + timeout
     rows = []
     while True:
@@ -230,14 +243,59 @@ async def query_destination(fabric, target, expected, run_id, *, timeout, interv
             rows = fabric_envelopes(data, expected)
         except ValueError:
             raise VerificationFailed('fabric_destination', 'stored envelope differs from the published envelope') from None
-        if any(e.correlation_id != run_id for e in rows):
+        if any(not in_run(e.correlation_id, run_id, prefix) for e in rows):
             raise VerificationFailed('fabric_destination', 'query returned rows from another run')
-        if len({key(e) for e in rows}) == len(expected) and len(rows) >= len(expected) + 1:
+        if len({key(e) for e in rows}) == len(expected) and len(rows) >= min_rows:
             return rows
         if clock() >= deadline:
+            missing = sorted(set(expected) - {key(e) for e in rows}, key=lambda k: k[2])
+            sample = ', '.join(k[1] for k in missing[:3])
             raise VerificationFailed('fabric_destination', f'timed out with {len({key(e) for e in rows})} of '
-                                     f'{len(expected)} events (and the duplicate) observed in {target.table}')
+                                     f'{len(expected)} events observed in {target.table}'
+                                     + (f'; missing {len(missing)} (first: {sample})' if missing else '; duplicate not yet stored'))
         await sleep(interval)
+
+
+STAGES = ('published', 'eventhub_readback', 'api_processed', 'fabric')
+
+
+def stage_summary(expected, keys, altered=0):
+    """Counts for one pipeline stage against the expected event keys."""
+    unique = set(keys)
+    missing = sorted(set(expected) - unique, key=lambda k: k[2])
+    return {'total': len(keys), 'unique': len(unique & set(expected)), 'missing': len(missing),
+            'missing_sample': [k[1] for k in missing[:5]], 'duplicates': len(keys) - len(unique),
+            'unexpected': len(unique - set(expected)), 'altered': altered}
+
+
+def reconcile(expected, stages):
+    """Compare every stage's event keys with the expected set. A stage that did not run (None) or that
+    lost, invented or altered an event fails reconciliation; duplicates are reported, not hidden."""
+    summary = {name: None if stages.get(name) is None else stage_summary(expected, *stages[name]) for name in STAGES}
+    complete = all(s is not None and s['unique'] == len(expected) and not s['missing'] and not s['unexpected']
+                   and not s['altered'] for s in summary.values())
+    return {'expected': len(expected), 'stages': summary, 'reconciled': complete}
+
+
+FULL_MATCH_SCOPE = ('One full synthetic match published to Event Hubs, read back, processed by MatchLens and reconciled '
+                    'in the Fabric Eventhouse under one run ID. Not continuous monitoring.')
+
+
+def full_match_record(*, run_id, started_at, match_id, expected, speed, agent_mode, azure, target, topology, published,
+                      reconciliation, failure):
+    """Sanitized record of one full-match run: identifiers, counts and outcomes only."""
+    verified = failure is None and bool(reconciliation and reconciliation['reconciled']) and topology is not None
+    return {'kind': 'full_match_replay', 'status': 'verified' if verified else 'failed', 'run_id': run_id,
+            'started_at': started_at, 'finished_at': now().isoformat(), 'scope': FULL_MATCH_SCOPE,
+            'agent_runtime': agent_mode, 'foundry_called': agent_mode == 'foundry',
+            'source': {'generator': 'recorded seed-99 synthetic match, full replay', 'match_id': match_id,
+                       'expected_events': expected, 'speed': speed},
+            'eventhubs': {'namespace': azure.namespace, 'eventhub': azure.eventhub_name,
+                          'readback_consumer_group': azure.consumer_group, 'auth': 'entra_id', 'publish_acknowledged': published},
+            'fabric': {'workspace_id': target.workspace_id, 'eventstream_id': target.eventstream_id,
+                       'eventhouse_id': target.eventhouse_id, 'kql_database': target.kql_database, 'table': target.table,
+                       'topology_verified': topology is not None, **(topology or {})},
+            'reconciliation': reconciliation, 'failure': failure}
 
 
 def now():

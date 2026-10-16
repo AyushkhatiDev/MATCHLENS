@@ -169,6 +169,55 @@ az containerapp update -g "$RG" -n "$APP" --image "$ACR.azurecr.io/matchlens-api
 
 The API is built without access logs (`--no-access-log`). On Vercel, roll back from **Deployments → (previous deployment) → Promote to Production** (or **Instant Rollback**). Rolling back either side does not need the other to change, as long as the origins stay the same.
 
+## Optional: hosted Event Hubs streaming
+
+Off by default. When enabled, the same API container also serves a **shared streamed match** at `/stream` (frontend page `/stream`), next to the unchanged per-browser recorded sessions.
+
+**How a run works:**
+1. A visitor clicks **Start synthetic match**, which sends `POST /api/stream/runs`. Runs are limited to one at a time, with a cooldown and an hourly budget.
+2. The API publishes the recorded seed-99 match (1,728 events) to Event Hubs at `APP_STREAM_SPEED`×. It uses the existing replay, `EventEnvelope` and `publish_stream` batching and retries, with correlation IDs `{run_id}:{sequence}`.
+3. The API consumes the run back with **its own consumer group** through the normal `MatchService` pipeline, and the `/stream` page shows it live.
+4. Fabric's Eventstream reads the same events independently through its own consumer group.
+5. If `APP_STREAM_FABRIC_VERIFY=true`, the API also verifies the Eventstream topology **before** publishing and runs a run-scoped Eventhouse query afterwards.
+
+`GET /api/stream/status` reports, without resource identifiers:
+- run ID, state and consumer readiness;
+- published count, API received and processed counts, processing errors, last event time;
+- per-stage reconciliation;
+- Fabric state: `NOT CONFIGURED`, `PENDING`, `TOPOLOGY VERIFIED`, `VERIFIED`, `FAILED` or `NOT VERIFIED`.
+
+`VERIFIED` appears only when the published, Event Hubs, API and Fabric event sets all match.
+
+| Variable | Value |
+|---|---|
+| `APP_STREAMING` | `true` to enable (default `false`) |
+| `AZURE_EVENT_HUB_FULLY_QUALIFIED_NAMESPACE`, `AZURE_EVENT_HUB_NAME` | the hub that Fabric's Eventstream reads |
+| `AZURE_EVENT_HUB_CONSUMER_GROUP` | the API's **own** group, e.g. `matchlens-api`. `$Default` and `matchlens-verification` are refused, and so is Fabric's group when verification is on. |
+| `APP_STREAM_SPEED` | replay speed 1–100 (default 20, about 5 minutes per match) |
+| `APP_STREAM_COOLDOWN_SECONDS` / `APP_STREAM_RUNS_PER_HOUR` / `APP_STREAM_RUN_TIMEOUT_SECONDS` | defaults 300 / 4 / 900 |
+| `APP_STREAM_AGENT_MODE` | `mock` (default) or `foundry`. Foundry runs every explained moment, so it is billed per run. |
+| `APP_STREAM_FABRIC_VERIFY` | `true` to verify topology and reconcile in Fabric; also needs `FABRIC_WORKSPACE_ID`, `FABRIC_EVENTSTREAM_ID`, `FABRIC_EVENTHOUSE_ID`, `FABRIC_KQL_ENDPOINT`, `FABRIC_KQL_DATABASE`, `FABRIC_SOURCE_CONSUMER_GROUP` |
+
+The API refuses to start if `AZURE_EVENT_HUB_CONNECTION_STRING` is set; streaming uses the container's managed identity (`AZURE_CLIENT_ID`).
+
+**Prerequisites:** these are cloud changes, each needing separate approval.
+- Create the API's consumer group on the hub.
+- Grant the API's user-assigned identity **Azure Event Hubs Data Sender** and **Data Receiver**, scoped to that hub only.
+- For `APP_STREAM_FABRIC_VERIFY`, the same identity needs:
+  - Fabric read and write on the Eventstream item, because the definition API requires write;
+  - user access on the Eventstream's source connection;
+  - query access on the KQL database.
+
+  Without these, leave verification off and the UI reports `FABRIC NOT CHECKED`.
+
+**Controlled verification of one run:**
+1. Deploy with `APP_STREAMING=true`, keeping one replica.
+2. Check that `GET /api/stream/status` shows `enabled: true`.
+3. Open `/stream` in a private window and click **Start synthetic match** once.
+4. Watch `published` and `api_received` reach 1,728.
+5. Confirm `state: complete`. With verification on, also confirm `fabric: VERIFIED` and `reconciled: true`.
+6. Separately, as an operator, confirm in the Fabric KQL editor that `MatchEvents | where correlation_id startswith "<run_id>:" | summarize dcount(event_id)` returns 1,728.
+
 ## Integration status reporting
 
 - **Foundry:** `/health` reports `MOCK` in mock mode. In Foundry mode it reports `FOUNDRY UNAVAILABLE` until a session's hero moment completes; `verified: true` appears only after a genuine `FOUNDRY LIVE` result. The endpoint itself never calls Foundry.
