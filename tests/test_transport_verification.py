@@ -2,6 +2,8 @@
 import asyncio
 import base64
 import json
+import re
+import uuid
 import httpx
 import pytest
 from simulator.production.transport import (FabricReader, FabricTarget, VerificationFailed, connection_matches,
@@ -42,6 +44,35 @@ class Hub:
         self.messages = []
 
 
+def toguid(value):
+    """Kusto toguid(): 32-hex or hyphenated GUID text converts; anything else (e.g. `{run_id}:{seq}`) is null."""
+    try:
+        return str(uuid.UUID(value))
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
+EXACT_QUERY = re.compile(r'^MatchEvents \| where correlation_id == "([^"]+)" \| project envelope$')
+PREFIX_QUERY = re.compile(r'^MatchEvents \| where tostring\(envelope\.correlation_id\) startswith "([^"]+)" \| project envelope$')
+TYPED_PREFIX_QUERY = re.compile(r'^MatchEvents \| where correlation_id startswith "([^"]+)" \| project envelope$')
+
+
+def kusto_select(envelopes, csl):
+    """Evaluate the verifier's KQL against rows shaped like the live table (mapping MatchEvents_mapping):
+    a guid-typed correlation_id column next to the full original envelope. Unknown query shapes fail loudly."""
+    rows = [(toguid(e.correlation_id), e) for e in envelopes]
+    if match := EXACT_QUERY.match(csl):
+        wanted = toguid(match[1])
+        kept = [e for typed, e in rows if wanted is not None and typed == wanted]
+    elif match := PREFIX_QUERY.match(csl):
+        kept = [e for _, e in rows if e.correlation_id.startswith(match[1])]
+    elif match := TYPED_PREFIX_QUERY.match(csl):
+        kept = [e for typed, e in rows if (typed or '').startswith(match[1])]
+    else:
+        raise AssertionError(f'unexpected KQL shape: {csl}')
+    return {'Tables': [{'Columns': [{'ColumnName': 'envelope'}], 'Rows': [[e.model_dump(mode='json')] for e in kept]}]}
+
+
 class FakeFabric:
     def __init__(self, hub, definition=None, path=path(), rows=lambda messages: messages, connection_type='EventHub',
                  database=None):
@@ -68,9 +99,8 @@ class FakeFabric:
 
     async def query(self, endpoint, database, csl):
         self.queries += 1
-        run_id = csl.split('"')[1]
-        stored = [e for e in self.rows(list(self.hub.messages)) if e.correlation_id == run_id]
-        return {'Tables': [{'Columns': [{'ColumnName': 'envelope'}], 'Rows': [[e.model_dump(mode='json')] for e in stored]}]}
+        self.last_query = csl
+        return kusto_select(self.rows(list(self.hub.messages)), csl)
 
 
 class FakeProducer:
