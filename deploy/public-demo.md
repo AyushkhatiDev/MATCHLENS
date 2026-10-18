@@ -216,7 +216,7 @@ The API refuses to start if `AZURE_EVENT_HUB_CONNECTION_STRING` is set; streamin
 3. Open `/stream` in a private window and click **Start synthetic match** once.
 4. Watch `published` and `api_received` reach 1,728.
 5. Confirm `state: complete`. With verification on, also confirm `fabric: VERIFIED` and `reconciled: true`.
-6. Separately, as an operator, confirm in the Fabric KQL editor that `MatchEvents | where correlation_id startswith "<run_id>:" | summarize dcount(event_id)` returns 1,728.
+6. Separately, as an operator, confirm in the Fabric KQL editor that `MatchEvents | where tostring(envelope.correlation_id) startswith "<run_id>:" | summarize rows=count(), events=dcount(event_id)` returns `events = 1728`. Filter on `envelope.correlation_id`: the table's `correlation_id` column is a `guid` and cannot hold `{run_id}:{sequence}`.
 
 ## Integration status reporting
 

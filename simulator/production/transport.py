@@ -230,10 +230,18 @@ def in_run(correlation_id, run_id, prefix):
 async def query_destination(fabric, target, expected, run_id, *, timeout, interval, sleep, clock, prefix=False, min_rows=None):
     """Poll the Eventhouse table for this run until every expected event (and, for the bounded batch,
     its deliberate duplicate) is present. Stored envelopes must equal the published ones."""
+    # Only validated identifiers reach the query text: a hex run ID and a plain table name.
     if not re.fullmatch(r'[0-9a-f]{32}', run_id):
         raise VerificationFailed('configuration', 'run ID must be a 32-character hex identifier')
-    selector = f'startswith "{run_id}:"' if prefix else f'== "{run_id}"'
-    csl = f'{target.table} | where correlation_id {selector} | project envelope'
+    if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', target.table):
+        raise VerificationFailed('configuration', 'invalid table name')
+    if prefix:
+        # The table's correlation_id column is a guid: `{run_id}:{sequence}` does not convert and is
+        # stored null. The original string survives in the full envelope, so filter on that.
+        csl = f'{target.table} | where tostring(envelope.correlation_id) startswith "{run_id}:" | project envelope'
+    else:
+        # A bare 32-hex run ID converts to the guid column; this is the verified bounded-run query.
+        csl = f'{target.table} | where correlation_id == "{run_id}" | project envelope'
     min_rows = len(expected) + 1 if min_rows is None else min_rows
     deadline = clock() + timeout
     rows = []

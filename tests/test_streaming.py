@@ -13,7 +13,7 @@ from simulator.production.streaming import StreamController, StreamRejected, Str
 from simulator.production.transport import VerificationFailed, in_run, key
 from simulator.realtime.azure import AzureConfig
 from simulator.realtime.sources import LocalReplaySource
-from tests.test_transport_verification import HUB, NAMESPACE, TARGET, FakeFabric, path, topology
+from tests.test_transport_verification import HUB, NAMESPACE, TARGET, FakeFabric, kusto_select, path, topology
 
 EXPECTED = sum(1 for line in DEFAULT_PATH.read_text().splitlines() if line.strip())
 BASE_ENV = {'APP_FRONTEND_ORIGINS': 'https://matchlens.example', 'AGENTIC_MODE': 'mock'}
@@ -79,7 +79,7 @@ def fakes(hub, *, ready=True, drop=frozenset(), duplicate=frozenset(), fail_star
 
 
 class StreamFabric(FakeFabric):
-    """Applies the same run-prefix filter the real KQL query uses."""
+    """Evaluates the real KQL against the live table's typed shape (guid correlation_id + envelope)."""
 
     def __init__(self, hub, rows=lambda messages: messages, fail=False, **kwargs):
         super().__init__(hub, rows=rows, **kwargs)
@@ -88,9 +88,8 @@ class StreamFabric(FakeFabric):
     async def query(self, endpoint, database, csl):
         if self.fail:
             raise VerificationFailed('fabric_destination', 'KQL query returned HTTP 503')
-        prefix = csl.split('"')[1]
-        stored = [e for e in self.rows(list(self.eventhub.log)) if e.correlation_id.startswith(prefix)]
-        return {'Tables': [{'Columns': [{'ColumnName': 'envelope'}], 'Rows': [[e.model_dump(mode='json')] for e in stored]}]}
+        self.last_query = csl
+        return kusto_select(self.rows(list(self.eventhub.log)), csl)
 
 
 @pytest.fixture(autouse=True)
