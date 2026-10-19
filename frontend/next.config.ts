@@ -14,5 +14,7 @@ export function apiOrigin(value=process.env.MATCHLENS_API_ORIGIN){
 const origin=apiOrigin();
 const config:NextConfig={output:'standalone',poweredByHeader:false,
  ...(origin?{async rewrites(){return [{source:'/api/:path*',destination:`${origin}/api/:path*`},
-                                       {source:'/sessions/:path*',destination:`${origin}/sessions/:path*`}];}}:{})};
+                                       {source:'/sessions/:path*',destination:`${origin}/sessions/:path*`},
+                                       // Shared Event Hubs stream data only; the /stream page itself stays a Next.js page.
+                                       {source:'/stream/api/:path*',destination:`${origin}/stream/api/:path*`}];}}:{})};
 export default config;

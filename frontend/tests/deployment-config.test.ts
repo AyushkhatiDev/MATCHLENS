@@ -1,4 +1,5 @@
-import {describe,expect,it} from 'vitest';
+import {describe,expect,it,vi} from 'vitest';
+import {getPathMatch} from 'next/dist/shared/lib/router/utils/path-match';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {apiOrigin} from '../next.config';
@@ -24,5 +25,38 @@ describe('same-origin API proxy configuration',()=>{
   expect(build).toMatch(/^ARG NEXT_PUBLIC_DEMO_SESSIONS=/m);
   expect(build).toMatch(/^ENV NEXT_PUBLIC_DEMO_SESSIONS=\$NEXT_PUBLIC_DEMO_SESSIONS$/m);
   expect(build).toContain('RUN npm run build');
+ });
+});
+
+describe('production same-origin proxy routing',()=>{
+ type Rewrite={source:string;destination:string};
+ async function rewrites(){
+  vi.resetModules();vi.stubEnv('MATCHLENS_API_ORIGIN','https://api.example');
+  const config=(await import('../next.config')).default as {rewrites:()=>Promise<Rewrite[]>};
+  vi.unstubAllEnvs();
+  return config.rewrites();
+ }
+ // Next.js's own matcher for rewrite sources; returns the proxied URL or null when Next.js serves the path.
+ async function proxied(pathname:string){
+  for(const rule of await rewrites()){
+   const params=getPathMatch(rule.source,{removeUnnamedParams:true,strict:true})(pathname);
+   if(params)return rule.destination.replace(':path*',[params.path??[]].flat().join('/')).replace(/\/$/,'');
+  }
+  return null;
+ }
+ it('forwards the shared stream data routes to the API origin',async()=>{
+  expect(await proxied('/stream/api/matches')).toBe('https://api.example/stream/api/matches');
+  expect(await proxied('/stream/api/matches/d67c4725-2894-4d6c-8aca-b5d0c169b0e4')).toBe('https://api.example/stream/api/matches/d67c4725-2894-4d6c-8aca-b5d0c169b0e4');
+  for(const path of ['matches/m/stream','matches/m/guide','matches/m/sequences','matches/m/sensitivity','matches/m/sequences/s/events','data-plane','comparison'])
+   expect(await proxied(`/stream/api/${path}`)).toBe(`https://api.example/stream/api/${path}`);
+ });
+ it('keeps the /stream page and the recorded experience on Next.js',async()=>{
+  for(const page of ['/stream','/demo','/','/analyst','/broadcast','/settings','/match/m','/player/p','/streaming','/stream/other'])expect(await proxied(page)).toBeNull();
+ });
+ it('leaves the existing API and session proxy routes unchanged',async()=>{
+  expect(await proxied('/api/sessions')).toBe('https://api.example/api/sessions');
+  expect(await proxied('/api/stream/status')).toBe('https://api.example/api/stream/status');
+  expect(await proxied('/sessions/'+'a'.repeat(32)+'/api/matches')).toBe('https://api.example/sessions/'+'a'.repeat(32)+'/api/matches');
+  expect((await rewrites()).map(r=>r.source)).toEqual(['/api/:path*','/sessions/:path*','/stream/api/:path*']);
  });
 });
