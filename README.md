@@ -8,7 +8,7 @@ MatchLens turns **synthetic football match events** into measured match state, e
 
 See the local match replay, the evidence behind the 21:14 goal, and the Story Stress Test compare observed and omitted tactical readings. The recording uses synthetic match data and offline mock interpretation.
 
-[![MatchLens Story Stress Test: observed Home control compared with High pressure after omitting a possession sequence](docs/media/matchlens-demo-story-stress.jpg)](https://vimeo.com/1238417597?share=copy&fl=sv&fe=ci)
+[![MatchLens AI football intelligence demo cover](docs/media/matchlens-demo-cover.png)](https://vimeo.com/1238417597?share=copy&fl=sv&fe=ci)
 
 *Click the preview to watch the demo on Vimeo.*
 
