@@ -2,17 +2,18 @@
 
 MatchLens turns **synthetic football match events** into measured match state, evidence-linked explanations, and an interactive viewing experience. It was built for Microsoft's *Inside the Game: Developer Hackathon*, in collaboration with the Premier League.
 
-## 🎬 Watch the 1:59 MatchLens Demo
+## 🎬 For Judges: Watch and Explore MatchLens
 
-**[▶ Watch the full hackathon demo on Vimeo](https://vimeo.com/1238417597?share=copy&fl=sv&fe=ci)**
+Start with the **[1:59 hackathon demo video on Vimeo](https://vimeo.com/1238417597?share=copy&fl=sv&fe=ci)**, or open the product directly:
+
+- [Interactive match demo](https://matchlens-web.ashystone-436ed578.koreacentral.azurecontainerapps.io/demo)
+- [Streaming experience](https://matchlens-web.ashystone-436ed578.koreacentral.azurecontainerapps.io/stream) — status and, when enabled, an on-demand synthetic run.
 
 See the local match replay, the evidence behind the 21:14 goal, and the Story Stress Test compare observed and omitted tactical readings. The recording uses synthetic match data and offline mock interpretation.
 
 [![MatchLens AI football intelligence demo cover](docs/media/matchlens-demo-cover.png)](https://vimeo.com/1238417597?share=copy&fl=sv&fe=ci)
 
 *Click the preview to watch the demo on Vimeo.*
-
-Try the [Main Demo](https://matchlens-web.ashystone-436ed578.koreacentral.azurecontainerapps.io/demo) or the [Streaming Experience](https://matchlens-web.ashystone-436ed578.koreacentral.azurecontainerapps.io/stream). The main demo explores a recorded synthetic match. The streaming page reports whether its optional Event Hubs path is enabled and, when enabled, offers an on-demand synthetic run.
 
 MatchLens uses deterministic Python analysis, a FastAPI service, a Next.js interface, optional Microsoft Agent Framework and Foundry workflows, Azure Event Hubs, and a separate Microsoft Fabric ingestion path. It does not use official Premier League match data and is not an official Premier League or Microsoft product.
 
